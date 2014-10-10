@@ -283,7 +283,7 @@ process {
   }
 }
 
-function Get-SevOneDevice # issue, device by ID is failing with the ID property
+function Get-SevOneDevice 
 {
 <#
   .SYNOPSIS
@@ -450,14 +450,14 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'Default' {
-            Write-Debug "in Default block"
+            Write-Debug 'in Default block'
             $return = $Global:SevOne.group_getDeviceGroups()
             Write-Debug "`$return has $($return.Count) members"
             continue
           }
         'Name' {
             Write-Debug 'in Name block'
-            $return = $Global:SevOne.group_getDeviceGroupIdByName($Name)
+            $return = $Global:SevOne.group_getDeviceGroupById($Global:SevOne.group_getDeviceGroupIdByName($Name,$null))
             Write-Debug "`$return has $($return.Count) members"
             continue
           }
@@ -566,7 +566,78 @@ process {
   }
 }
 
-function New-SevOneDevice {}
+function New-SevOneDevice {
+<##>
+[cmdletBinding(DefaultParameterSetName='group')]
+param (    
+    #
+    [Parameter(Mandatory,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='group')]
+    [string]$Name,
+    
+    #
+    [Parameter(Mandatory,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='group')]
+    [ipaddress]$IPAddress,
+    
+    #
+    [Parameter(
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='group')]
+    $Peer = (Get-SevOnePeer)[0], # this is actually pretty hokey, will need to find a better way to do this.
+    
+    #
+    [Parameter(
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='group')]
+    $Group = (Get-SevOneDeviceGroup -Name 'All Device Groups'),
+
+    #
+    [Parameter(
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='group')]
+    [string]$Description = '',
+
+    #
+    [Parameter(
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='group')]
+    [switch]$PassThrough
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    switch ($PSCmdlet.ParameterSetName)
+      {
+        'group' {
+            Write-Debug 'In group block'
+            $return = $Global:SevOne.core_createDeviceInGroup($Name,$IPAddress.IPAddressToString,$Peer.id,$Description,$Group.id)
+            Write-Verbose 'finished create operation, testing $return'
+            Write-Debug "`$return = $return"
+            switch ($return)
+              {
+                -1 {Write-Error "Could not add device: $Name" ; continue}
+                -2 {Write-Error "Could not find peer: $($Peer.Name)" ; continue}
+                -3 {Write-Error "$($Peer.Name) does not support adding devices" ; continue}
+                0 {Write-Error "failed creating device $name" ; continue}
+                default {
+                    Write-Verbose "Successfully created device $Name"
+                    if ($PassThrough) {Get-SevOneDevice -ID $return}
+                  }
+              }
+          }
+      }
+  }
+end {}
+}
 
 function Set-SevOneDevice {}
 
