@@ -454,7 +454,7 @@ process{
 end {}
 }
  
-function Get-SevOneDeviceGroup {
+function Get-SevOneDeviceGroup { # not failing whe group doesn't exist
 <##>
 [cmdletbinding(DefaultParameterSetName='default')]
 param (
@@ -507,7 +507,70 @@ end {}
 
 function Set-SevOneDeviceGroup {}
 
-function New-SevOneDeviceGroup {}
+function New-SevOneDeviceGroup {
+<##>
+[cmdletBinding(DefaultParameterSetName='group')]
+param (
+    #
+    [Parameter(Mandatory,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='id')]
+    [int]$ParentID,
+
+    #
+    [Parameter(Mandatory,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='group')]
+    $ParentGroup,
+    
+    #
+    [Parameter(Mandatory,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='group')]
+    [Parameter(Mandatory,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='id')]
+    [string]$Name,
+
+    #
+    [Parameter(
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='group')]
+    [Parameter(
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='id')]
+    [switch]$PassThrough
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    switch ($PSCmdlet.ParameterSetName)
+      {
+        'group' {
+            $return = $Global:SevOne.group_createDeviceGroup($Name,$ParentGroup.ID)
+          }
+        'id' {
+             $return = $Global:SevOne.group_createDeviceGroup($Name,$ParentID)
+          }
+      }
+    switch ($return)
+      {
+        -1 {Write-Error "Could not create group: $Name" ; continue}
+        default {
+            Write-Verbose "Successfully created group $Name" 
+            if ($PassThrough) {Get-SevoneDeviceGroup -ID $return}
+            continue
+          }
+      }
+  }
+end {}
+}
 
 function Remove-SevOneGroup {
 <##>
