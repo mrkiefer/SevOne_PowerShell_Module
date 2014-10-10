@@ -1,3 +1,4 @@
+#requires -version 3.0
 $SevOne = $null
 
 # Indicators, Objects
@@ -13,7 +14,7 @@ $SevOne = $null
 
 
 function __TestSevOneConnection__ {
-try {[bool]$SevOne.returnthis(1)} catch {$false}
+  try {[bool]$SevOne.returnthis(1)} catch {$false}
 }
 
 Function __fromUNIXTime__ {
@@ -125,11 +126,21 @@ filter __AlertObject__ {
 }
 
 filter __DeviceClass__ {
-
+  $obj = [pscustomobject]@{
+      Name = $_.name
+      Id = $_.id
+    }
+  $obj.PSObject.TypeNames.Insert(0,'SevOne.Class.DeviceClass')
+  $obj
 }
 
 filter __ObjectClass__ {
-
+  $obj = [pscustomobject]@{
+      Name = $_.name
+      Id = $_.id
+    }
+  $obj.PSObject.TypeNames.Insert(0,'SevOne.Class.ObjectClass')
+  $obj
 }
 
 filter __DeviceGroupObject__ {
@@ -220,7 +231,7 @@ catch {
     Write-Verbose 'Successfully connected to SevOne Appliance'
 }
 
-function Get-SevOneDevice # looking pretty good, still need to test if the API call fails --- issue, device by ID is failing with the ID property
+function Get-SevOneDevice # issue, device by ID is failing with the ID property
 {
 <#
   .SYNOPSIS
@@ -277,7 +288,10 @@ process {
             $return = $SevOne.core_getDeviceById($ID)
             continue
           }
-        'IPAddress' { $return =  $SevOne.core_getDeviceById(($SevOne.core_getDeviceIdByIp($IPAddress.IPAddressToString))) ; continue}
+        'IPAddress' { 
+          $return =  $SevOne.core_getDeviceById(($SevOne.core_getDeviceIdByIp($IPAddress.IPAddressToString)))
+          continue
+        }
       }
     $return | __DeviceObject__
   }
@@ -414,13 +428,129 @@ function Set-SevOneDeviceGroup {}
 
 function New-SevOneDeviceGroup {}
 
-function Remove-SevOneDeviceGroup {}
+function Remove-SevOneGroup {
+<##>
+[cmdletbinding(SupportsShouldProcess=$true,DefaultParameterSetName='default',ConfirmImpact='high')]
+param (
+    #
+    [parameter(Mandatory,
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    $Group
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    Write-Verbose "Opening process block for $($Group.name)"
+    if ($PSCmdlet.ShouldProcess("$($Group.name)","Remove SevOne Group"))
+      {
+        switch ($Group.PSObject.TypeNames[0])
+          {
+            'sevone.group.deviceGroup' {
+                $return = $SevOne.group_deleteDeviceGroup($Group.id)
+                if ($return -ne 1) {
+                    Write-Error "failed to delete $($Group.name)"
+                  }
+                continue
+              }
+            'SevOne.Group.ObjectGroup' {
+                $return = $SevOne.group_deleteObjectGroup($Group.id)
+                if ($return -ne 1) {
+                    Write-Error "failed to delete $($Group.name)"
+                  }
+                continue
+              }
+          }
+      }
+  }
+}
+
+function Remove-SevOneClass {
+<##>
+[cmdletbinding(SupportsShouldProcess=$true,DefaultParameterSetName='default',ConfirmImpact='high')]
+param (
+    #
+    [parameter(Mandatory,
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    $Class
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    Write-Verbose "Opening process block for $($Class.name)"
+    if ($PSCmdlet.ShouldProcess("$($Class.name)","Remove SevOne Group"))
+      {
+        switch ($Class.PSObject.TypeNames[0])
+          {
+            'SevOne.Class.deviceClass' {
+                $return = $SevOne.group_deleteDeviceClass($Class.id)
+                if ($return -ne 1) {
+                    Write-Error "failed to delete $($Class.name)"
+                  }
+                continue
+              }
+            'SevOne.Class.ObjectClass' {
+                $return = $SevOne.group_deleteObjectClass($Class.id)
+                if ($return -ne 1) {
+                    Write-Error "failed to delete $($Class.name)"
+                  }
+                continue
+              }
+          }
+      }
+  }
+}
 
 function New-SevOneDevice {}
 
 function Set-SevOneDevice {}
 
-function Remove-SevOneDevice {}
+function Remove-SevOneDevice {
+<##>
+[cmdletbinding(SupportsShouldProcess=$true,DefaultParameterSetName='default',ConfirmImpact='high')]
+param (
+    #
+    [parameter(Mandatory,
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    $Device
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    Write-Verbose "Opening process block for $($Device.name)"
+    if ($PSCmdlet.ShouldProcess("$($Device.name)","Remove SevOne Device"))
+      {
+        $return = $SevOne.core_deleteDevice($Device.id)
+        if ($return -ne 1) {
+            Write-Error "failed to delete $($Device.name)"
+          }
+        continue
+      }
+  }
+}
 
 function Get-SevOneThreshold 
 {
