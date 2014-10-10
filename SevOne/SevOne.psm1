@@ -187,7 +187,7 @@ filter __PeerObject__ {
 
 function Connect-SevOne {
 <#
-  .Synopsis
+  .SYNOPSIS
      Create a connection to a SevOne Instance 
   .DESCRIPTION
      Creates a SOAP API connection to the specified SevOne Management instance.
@@ -197,6 +197,23 @@ function Connect-SevOne {
      Connect-SevOne -ComputerName 192.168.0.10 -credential (get-credential)
 
      Establishes a new connection to the SevOne Management server at 192.168.0.10
+
+  .EXAMPLE
+    $Cred = get-credential
+
+    # Stores credentials inside the Variable Cred
+
+    $SevOneName = 'MySevOneAppliance'
+
+    # Stores the hostname
+
+    Connect-SevOne $SevOneName $Cred
+
+    # Connects to the SevOne Appliance MySevOneAppliance.  In this example the parameters are called positionally.
+
+    # if you're unsure about your credentials you can check the username and password with the following commands:
+    $Cred.UserName
+    $Cred.GetNetworkCredential().password
 #>
   [CmdletBinding()]
   param
@@ -251,7 +268,26 @@ catch {
 }
 
 function Get-SevOnePeer {
-<##>
+<#
+  .SYNOPSIS
+    Gathers one or more SevOne Peers.
+
+  .DESCRIPTION
+    This function will gather Peer objects for one or more peers in the SevOne environment. By default it will return a peer object for every peer connected.  if you specify the -ID parameter only the Peer with the corresponding ID will be returned.
+
+  .EXAMPLE
+    Get-SevOnePeer
+
+    returns all Sevone Peers in the connected environment
+
+  .EXAMPLE 
+    Get-SevOnePeer -ID 26
+
+    returns the SevOne peer with an ID of 26
+
+  .NOTES
+
+#>
 [cmdletbinding(DefaultParameterSetName='default')]
 param (
     #
@@ -283,8 +319,7 @@ process {
   }
 }
 
-function Get-SevOneDevice 
-{
+function Get-SevOneDevice {
 <#
   .SYNOPSIS
     Gathers SevOne devices
@@ -298,6 +333,17 @@ function Get-SevOneDevice
     Gathers all SevOne devices
 
   .EXAMPLE
+    Get-SevOneDevice -Name MyServer
+
+    Returns a device object for the device named MyServer
+
+  .EXAMPLE
+    Get-SevOne -IPAddress 192.168.0.100
+
+    Returns a device object for the device with an IP of 192.168.0.100
+
+  .NOTES
+    At this point there is no support for wildcards.
 #>
 [cmdletbinding(DefaultParameterSetName='default')]
 param
@@ -380,9 +426,29 @@ process {
   }
 }
 
-function Get-SevOneAlert # only gets active alerts, may want to change this in the future
-{
-<##>
+function Get-SevOneAlert {
+<#
+  .SYNOPSIS
+    Gather open alerts in the SevOne environment.
+
+  .DESCRIPTION
+    This function is able to gather alerts generally or on a by device basis.  You can also use -StartTime to filter return data by starttime.  Only open alerts are gathered with this function.
+
+  .EXAMPLE
+    Get-SevOneAlert
+
+    returns all active alerts
+
+  .EXAMPLE
+    Get-SevOneDevice -Name MyServer | Get-SevOneAlert
+
+    returns all active alerts for the device, MyServer
+
+  .NOTES
+    Only gathers open alerts
+    Starttime filters on the client side and not the Server side
+
+#>
 [cmdletbinding(DefaultParameterSetName='default')]
 param
   (
@@ -397,7 +463,7 @@ param
     # The time to start pulling alerts
     [parameter(ParameterSetName='Device')]
     [parameter(ParameterSetName='Default')]    
-    [datetime]$StartTime
+    [datetime]$StartTime # not sure I'm happy with the way this parameter is implemented. The filtering occurs on the client side which is pretty wasteful.  Need to explore the API's filtering capabilities.
   )
 begin {
     if (-not (__TestSevOneConnection__)) {
@@ -429,7 +495,28 @@ end {}
 }
 
 function Close-SevOneAlert {
-<##>
+<#
+  .SYNOPSIS
+    Closes a SevOne Alert 
+
+  .DESCRIPTION
+    This function will close one or more SevOne Alerts
+
+  .EXAMPLE
+    Get-SevOneAlert | Close-SevOneAlert -message "clearing all alerts"
+
+    Closes all open alerts and appends a message saying, "clearing all alerts"
+
+  .EXAMPLE
+    $Device = Get-SevOneDevice -Name MyServer
+
+    $Alert = Get-SevOneAlert -Device $Device
+
+    Close-SevOneAlert -Alert $Alert
+
+  .NOTES
+    This one is working really well, the default message may change over time.
+#>
 [cmdletbinding()]
 param 
   (
@@ -454,8 +541,24 @@ process{
 end {}
 }
  
-function Get-SevOneDeviceGroup { # not failing whe group doesn't exist
-<##>
+function Get-SevOneDeviceGroup { # 
+<#
+  .SYNOPSIS
+    returns device groups
+
+  .DESCRIPTION
+    This function will return one or more device groups
+
+  .EXAMPLE
+    Get-SevOneDeviceGroup
+
+  .NOTES
+    not failing when group doesn't exist, we can probably copy the functionality out of the Device function.
+
+    It's likely that we can combine this with the Object Group function
+
+    Additionally it looks like the API uses Device Group and Device Class interchangeably.  We may be able to eliminate the DeviceClass functions.
+#>
 [cmdletbinding(DefaultParameterSetName='default')]
 param (
     #
