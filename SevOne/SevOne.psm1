@@ -535,4 +535,89 @@ process {
 end {}
 }
 
+function Get-SevOneObjectClass {
+<##>
+[cmdletbinding(DefaultParameterSetName='default')]
+param (
+    #
+    [Parameter(Mandatory,
+    ParameterSetName='Name')]
+    [string]$Name,
+
+    #
+    [Parameter(Mandatory,
+    ParameterSetName='ID')]
+    [int]$ID
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    switch ($PSCmdlet.ParameterSetName)
+      {
+        'Default' {
+            $return = $SevOne.group_getObjectClasses()
+            continue
+          }
+        'Name' {
+            $return = $SevOne.group_getObjectClassByName($Name)
+            continue
+          }
+        'ID' {
+            $return = $SevOne.group_getObjectClassById($ID)
+            continue
+          }
+      }
+    $return | __ObjectClass__
+  }
+}  
+
+
+function Get-SevOneDeviceClass {
+<##>
+[cmdletbinding(DefaultParameterSetName='device')]
+param (
+    #
+    [Parameter(Mandatory,
+    ParameterSetName='Name')]
+    [string]$Name,
+
+    #
+    [Parameter(Mandatory,
+    ParameterSetName='ID')]
+    [int]$ID
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    switch ($PSCmdlet.ParameterSetName)
+      {
+        'Default' {
+            $return = $SevOne.group_getDeviceClasses()
+            continue
+          }
+        'Name' {
+            $return = $SevOne.group_getDeviceClassByName($Name)
+            continue
+          }
+        'ID' {
+            $return = $SevOne.group_getDeviceClassById($ID)
+            continue
+          }
+      }
+    $return | __DeviceClass__
+  }
+}
+
 Export-ModuleMember -Function *-* 
