@@ -1,5 +1,5 @@
 #requires -version 3.0
-$SevOne = $null
+$Global:SevOne = $null
 
 # Indicators, Objects
 
@@ -14,7 +14,8 @@ $SevOne = $null
 
 
 function __TestSevOneConnection__ {
-  try {[bool]$SevOne.returnthis(1)} catch {$false}
+  Write-Debug 'Begin test'
+  try {[bool]$Global:SevOne.returnthis(1)} catch {$false}
 }
 
 Function __fromUNIXTime__ {
@@ -184,8 +185,7 @@ filter __PeerObject__ {
   $obj
 }
 
-function Connect-SevOne
-{
+function Connect-SevOne {
 <#
   .Synopsis
      Create a connection to a SevOne Instance 
@@ -250,8 +250,7 @@ catch {
     Write-Verbose 'Successfully connected to SevOne Appliance'
 }
 
-function Get-SevOnePeer 
-{
+function Get-SevOnePeer {
 <##>
 [cmdletbinding(DefaultParameterSetName='default')]
 param (
@@ -272,11 +271,11 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'default' {
-            $return = $SevOne.core_getPeers()
+            $return = $Global:SevOne.core_getPeers()
             continue
           }
         'id' {
-            $return = $SevOne.core_getPeerById($id)
+            $return = $Global:SevOne.core_getPeerById($id)
             continue
           }
       }
@@ -330,19 +329,19 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'default' { 
-            $return = $SevOne.core_getDevices()
+            $return = $Global:SevOne.core_getDevices()
             continue
           }
         'Name' { 
-            $return =  $SevOne.core_getDeviceByName($Name)
+            $return =  $Global:SevOne.core_getDeviceByName($Name)
             continue
           }
         'ID' { 
-            $return = $SevOne.core_getDeviceById($ID)
+            $return = $Global:SevOne.core_getDeviceById($ID)
             continue
           }
         'IPAddress' { 
-          $return =  $SevOne.core_getDeviceById(($SevOne.core_getDeviceIdByIp($IPAddress.IPAddressToString)))
+          $return =  $Global:SevOne.core_getDeviceById(($Global:SevOne.core_getDeviceIdByIp($IPAddress.IPAddressToString)))
           continue
         }
       }
@@ -379,10 +378,10 @@ process
     switch ($PSCmdlet.ParameterSetName)
       {
         'default' {
-            $return = $SevOne.alert_getAlerts(0)
+            $return = $Global:SevOne.alert_getAlerts(0)
           }
         'device' {
-            $return = $SevOne.alert_getAlertsByDeviceId($Device.id,0)
+            $return = $Global:SevOne.alert_getAlertsByDeviceId($Device.id,0)
           }
       }
     foreach ($a in ($return | __AlertObject__))
@@ -398,8 +397,7 @@ process
 end {}
 }
 
-function Close-SevOneAlert
-{
+function Close-SevOneAlert {
 <##>
 [cmdletbinding()]
 param 
@@ -418,15 +416,14 @@ begin {
   }
 process{
     try {
-        $return = $SevOne.alert_clearByAlertId($Alert.ID,$Message) 
+        $return = $Global:SevOne.alert_clearByAlertId($Alert.ID,$Message) 
       }
     catch {}
   }
 end {}
 }
-
-function Get-SevOneDeviceGroup
-{
+ 
+function Get-SevOneDeviceGroup {
 <##>
 [cmdletbinding(DefaultParameterSetName='default')]
 param (
@@ -454,19 +451,19 @@ process {
       {
         'Default' {
             Write-Debug "in Default block"
-            $return = $SevOne.group_getDeviceGroups()
+            $return = $Global:SevOne.group_getDeviceGroups()
             Write-Debug "`$return has $($return.Count) members"
             continue
           }
         'Name' {
             Write-Debug 'in Name block'
-            $return = $SevOne.group_getDeviceGroupIdByName($Name)
+            $return = $Global:SevOne.group_getDeviceGroupIdByName($Name)
             Write-Debug "`$return has $($return.Count) members"
             continue
           }
         'ID' {
             Write-Debug 'in ID block'
-            $return = $SevOne.group_getDeviceGroupById($ID)
+            $return = $Global:SevOne.group_getDeviceGroupById($ID)
             Write-Debug "`$return has $($return.Count) members"
             continue
           }
@@ -507,14 +504,14 @@ process {
         switch ($Group.PSObject.TypeNames[0])
           {
             'sevone.group.deviceGroup' {
-                $return = $SevOne.group_deleteDeviceGroup($Group.id)
+                $return = $Global:SevOne.group_deleteDeviceGroup($Group.id)
                 if ($return -ne 1) {
                     Write-Error "failed to delete $($Group.name)"
                   }
                 continue
               }
             'SevOne.Group.ObjectGroup' {
-                $return = $SevOne.group_deleteObjectGroup($Group.id)
+                $return = $Global:SevOne.group_deleteObjectGroup($Group.id)
                 if ($return -ne 1) {
                     Write-Error "failed to delete $($Group.name)"
                   }
@@ -551,14 +548,14 @@ process {
         switch ($Class.PSObject.TypeNames[0])
           {
             'SevOne.Class.deviceClass' {
-                $return = $SevOne.group_deleteDeviceClass($Class.id)
+                $return = $Global:SevOne.group_deleteDeviceClass($Class.id)
                 if ($return -ne 1) {
                     Write-Error "failed to delete $($Class.name)"
                   }
                 continue
               }
             'SevOne.Class.ObjectClass' {
-                $return = $SevOne.group_deleteObjectClass($Class.id)
+                $return = $Global:SevOne.group_deleteObjectClass($Class.id)
                 if ($return -ne 1) {
                     Write-Error "failed to delete $($Class.name)"
                   }
@@ -596,7 +593,7 @@ process {
     Write-Verbose "Opening process block for $($Device.name)"
     if ($PSCmdlet.ShouldProcess("$($Device.name)","Remove SevOne Device"))
       {
-        $return = $SevOne.core_deleteDevice($Device.id)
+        $return = $Global:SevOne.core_deleteDevice($Device.id)
         if ($return -ne 1) {
             Write-Error "failed to delete $($Device.name)"
           }
@@ -605,8 +602,7 @@ process {
   }
 }
 
-function Get-SevOneThreshold 
-{
+function Get-SevOneThreshold {
 <##>
 [cmdletbinding(DefaultParameterSetName='device')]
 param (
@@ -655,15 +651,15 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'Name' {
-            $return = $SevOne.threshold_getThresholdByName($Device.id,$Name)
+            $return = $Global:SevOne.threshold_getThresholdByName($Device.id,$Name)
             continue
           }
         'Device' {
-            $return = $SevOne.threshold_getThresholdsByDevice($Device.id,$Pluggin.id,$Object.id,$Indicator.id)
+            $return = $Global:SevOne.threshold_getThresholdsByDevice($Device.id,$Pluggin.id,$Object.id,$Indicator.id)
             continue
           }
         'ID' {
-            $return = $SevOne.threshold_getThresholdById($Device.id,$ID)
+            $return = $Global:SevOne.threshold_getThresholdById($Device.id,$ID)
             continue
           }
       }
@@ -677,8 +673,7 @@ function Set-SevOneThreshold {}
 
 function Remove-SevOneThreshold {}
 
-function Get-SevOneObjectGroup
-{
+function Get-SevOneObjectGroup {
 <##>
 [cmdletbinding(DefaultParameterSetName='default')]
 param (
@@ -701,13 +696,13 @@ process {
       {
         'Default' {
             Write-Debug 'in Default block'
-            $return = $SevOne.group_getObjectGroups()
+            $return = $Global:SevOne.group_getObjectGroups()
             Write-Debug "`$return has $($return.Count) members"
             continue
           }
         'ID' {
             Write-Debug 'in ID block'
-            $return = $SevOne.group_getObjectGroupById($ID)
+            $return = $Global:SevOne.group_getObjectGroupById($ID)
             Write-Debug "`$return has $($return.Count) members"
             continue
           }
@@ -744,15 +739,15 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'Default' {
-            $return = $SevOne.group_getObjectClasses()
+            $return = $Global:SevOne.group_getObjectClasses()
             continue
           }
         'Name' {
-            $return = $SevOne.group_getObjectClassByName($Name)
+            $return = $Global:SevOne.group_getObjectClassByName($Name)
             continue
           }
         'ID' {
-            $return = $SevOne.group_getObjectClassById($ID)
+            $return = $Global:SevOne.group_getObjectClassById($ID)
             continue
           }
       }
@@ -787,15 +782,15 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'Default' {
-            $return = $SevOne.group_getDeviceClasses()
+            $return = $Global:SevOne.group_getDeviceClasses()
             continue
           }
         'Name' {
-            $return = $SevOne.group_getDeviceClassByName($Name)
+            $return = $Global:SevOne.group_getDeviceClassByName($Name)
             continue
           }
         'ID' {
-            $return = $SevOne.group_getDeviceClassById($ID)
+            $return = $Global:SevOne.group_getDeviceClassById($ID)
             continue
           }
       }
