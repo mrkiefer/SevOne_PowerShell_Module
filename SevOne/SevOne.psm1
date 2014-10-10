@@ -329,23 +329,54 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'default' { 
-            $return = $Global:SevOne.core_getDevices()
+            Write-Debug 'in default block'
+            try {$return = $Global:SevOne.core_getDevices()} catch {
+                $return = $null
+                Write-Error $_.exception.message
+              }
             continue
           }
         'Name' { 
-            $return =  $Global:SevOne.core_getDeviceByName($Name)
+            Write-Debug 'in name block'
+            try {
+                $return =  $Global:SevOne.core_getDeviceByName($Name)
+                Write-Debug 'Test $return to ensure object is not blank'
+                if (-not $return.id)
+                  {throw "Empty object returned for $Name"}
+              } 
+            catch {
+                $return = $null
+                Write-Error "No device found with name: $Name"
+                Write-Error $_.exception.message
+              }
             continue
           }
         'ID' { 
-            $return = $Global:SevOne.core_getDeviceById($ID)
+            Write-Debug 'in id block'
+            try {$return = $Global:SevOne.core_getDeviceById($ID)} catch {
+                $return = $null
+                Write-Error "No device found with id: $id"
+                Write-Error $_.exception.message
+              }
             continue
           }
         'IPAddress' { 
-          $return =  $Global:SevOne.core_getDeviceById(($Global:SevOne.core_getDeviceIdByIp($IPAddress.IPAddressToString)))
-          continue
+            Write-Debug 'in IPAddress block'
+            try {
+                $return = $Global:SevOne.core_getDeviceById(($Global:SevOne.core_getDeviceIdByIp($IPAddress.IPAddressToString)))
+              } 
+            catch {
+                $return = $null
+                Write-Error "No device found with IPAddress: $($IPAddress.IPAddressToString)"
+                Write-Error $_.exception.message
+              }
+            continue
         }
       }
-    $return | __DeviceObject__
+    if ($return)
+      {
+        $return | __DeviceObject__
+      }
   }
 }
 
