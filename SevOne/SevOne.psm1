@@ -165,6 +165,25 @@ filter __ObjectGroupObject__ {
   $obj
 }
 
+filter __PeerObject__ {
+  $obj = [pscustomobject]@{
+      serverId = $_.ServerId 
+      name = $_.name 
+      ip = $_.ip
+      is64bit = $_.is64bit
+      memory = $_.memory
+      isMaster = $_.isMaster 
+      username = $_.username 
+      password = $_.password 
+      capacity = $_.capacity
+      serverLoad = $_.serverLoad
+      flowLoad = $_.flowLoad 
+      model = $_.model
+    }
+  $obj.PSObject.TypeNames.Insert(0,'SevOne.Group.ObjectGroup')
+  $obj
+}
+
 function Connect-SevOne
 {
 <#
@@ -229,6 +248,40 @@ catch {
   }
     $Global:SevOne = $Client
     Write-Verbose 'Successfully connected to SevOne Appliance'
+}
+
+function Get-SevOnePeer 
+{
+<##>
+[cmdletbinding(DefaultParameterSetName='default')]
+param (
+    #
+    [Parameter(Mandatory,
+    ParameterSetName='ID')]
+    [int]$ID
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    switch ($PSCmdlet.ParameterSetName)
+      {
+        'default' {
+            $return = $SevOne.core_getPeers()
+            continue
+          }
+        'id' {
+            $return = $SevOne.core_getPeerById($id)
+            continue
+          }
+      }
+    $return | __PeerObject__
+  }
 }
 
 function Get-SevOneDevice # issue, device by ID is failing with the ID property
