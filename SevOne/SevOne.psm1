@@ -53,6 +53,16 @@ process {
   }
 }
 
+filter __PluginObject__ {
+    $obj = [pscustomobject]@{
+      Name = $_.name
+      Id = $_.id
+      Type = $_.objectString
+    }
+  $obj.PSObject.TypeNames.Insert(0,'SevOne.Plugin.PluginClass')
+  $obj
+  }
+
 filter __DeviceObject__ {
   $base = $_
   $obj = [pscustomobject]@{
@@ -143,15 +153,6 @@ filter __AlertObject__ {
       automaticallyProcessed = $_.automaticallyProcessed
     }
   $obj.PSObject.TypeNames.Insert(0,'SevOne.Alert.AlertInfo')
-  $obj
-}
-
-filter __DeviceClass__ {
-  $obj = [pscustomobject]@{
-      Name = $_.name
-      Id = $_.id
-    }
-  $obj.PSObject.TypeNames.Insert(0,'SevOne.Class.DeviceClass')
   $obj
 }
 
@@ -560,6 +561,37 @@ process{
   }
 end {}
 }
+
+function Get-SevOnePlugin {
+<#
+  .SYNOPSIS
+    Gather SevOne plugins
+  .DESCRIPTION
+    This function will gather all SevOne plugin objects
+  .NOTES
+#>
+[cmdletBinding(DefaultParameterSetName='default')]
+param (
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    switch ($PSCmdlet.ParameterSetName)
+      {
+        'default' {
+            $return = $Global:SevOne.core_getPlugins()
+          }
+      }
+    $return | __PluginObject__
+  }
+end {}
+  }
  
 function Get-SevOneDeviceGroup { # 
 <#
@@ -856,8 +888,6 @@ end {}
 
 function Set-SevOneDevice {}
 
-
-
 function Get-SevOneThreshold {
 <##>
 [cmdletbinding(DefaultParameterSetName='device')]
@@ -1009,21 +1039,30 @@ process {
       }
     $return | __ObjectClass__
   }
-}  
+} 
 
-function Get-SevOneDeviceClass {
+function Add-SevOneDeviceToGroup {
 <##>
-[cmdletbinding(DefaultParameterSetName='device')]
+[cmdletbinding(DefaultParameterSetName='default')]
 param (
-    #
-    [Parameter(Mandatory,
-    ParameterSetName='Name')]
-    [string]$Name,
-
-    #
-    [Parameter(Mandatory,
+    [parameter(Mandatory,
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    [PSObject]$Device,
+    [parameter(Mandatory,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    [PSObject]$Group,
+    [parameter(Mandatory,
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName,
     ParameterSetName='ID')]
-    [int]$ID
+    [int]$DeviceID,
+    [parameter(Mandatory,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='ID')]
+    [int]$GroupID
   )
 begin {
     Write-Verbose 'Starting operation'
@@ -1036,21 +1075,76 @@ begin {
 process {
     switch ($PSCmdlet.ParameterSetName)
       {
-        'Default' {
-            $return = $Global:SevOne.group_getDeviceClasses()
-            continue
-          }
-        'Name' {
-            $return = $Global:SevOne.group_getDeviceClassByName($Name)
-            continue
+        'default' {
+            $return = $Global:SevOne.group_addDeviceToGroup($Device.ID,$Group.ID)
           }
         'ID' {
-            $return = $Global:SevOne.group_getDeviceClassById($ID)
+            $return = $Global:SevOne.group_addDeviceToGroup($DeviceID,$GroupID)
+          }
+      }
+    switch ($return)
+      {
+        0 {Write-Error 'Could not add device to group' ; continue}
+        default {
+            Write-Verbose 'Successfully created added device to group'
             continue
           }
       }
-    $return | __DeviceClass__
   }
+end {}
+}
+
+function Add-SevOneObjectToGroup {
+<##>
+[cmdletbinding(DefaultParameterSetName='default')]
+param (
+    #
+    [parameter(Mandatory,
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    [PSObject]$Device,
+    #
+    [parameter(Mandatory,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    [PSObject]$Group,
+    #
+    [parameter(Mandatory,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    [PSObject]$Object,
+    #
+    [parameter(Mandatory,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    [PSObject]$Plugin
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    switch ($PSCmdlet.ParameterSetName)
+      {
+        'default' {
+            $return = $Global:SevOne.group_addObjectToGroup($Device.id,$Object.id,$Group.id,$Plugin.id)
+          }
+      }
+    switch ($return)
+      {
+        0 {Write-Error "Could not add object, $($Object.name) to group" ; continue}
+        default {
+            Write-Verbose 'Successfully created added device to group'
+            continue
+          }
+      }
+  }
+end {}
 }
 
 Export-ModuleMember -Function *-* 
