@@ -12,7 +12,7 @@
 RootModule = '.\SevOne\SevOne.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0'
+ModuleVersion = '1.0.1'
 
 # ID used to uniquely identify this module
 GUID = '21545567-9e35-4ff6-a35c-67d31564cbee'

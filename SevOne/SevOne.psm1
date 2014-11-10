@@ -1,7 +1,7 @@
 #requires -version 3.0
 $SevOne = $null
 
-$TimeZones = Get-Content -Path $PSScriptRoot\timezones.txt
+#$TimeZones = Get-Content -Path $PSScriptRoot\timezones.txt
 # Indicators, Objects
 
 # Group > Device > object > indicator
@@ -30,7 +30,6 @@ function __TestReturn__ {
         default {throw "Unexpected return code: $return"}
       }
     }
-
 
 function __TestSevOneConnection__ {
   Write-Debug 'Begin test'
@@ -81,7 +80,7 @@ process {
 filter __PluginObject__ {
     $obj = [pscustomobject]@{
       Name = $_.name
-      Id = $_.id
+      Id = [int]($_.id)
       Type = $_.objectString
     }
   $obj.PSObject.TypeNames.Insert(0,'SevOne.Plugin.PluginClass')
@@ -91,36 +90,38 @@ filter __PluginObject__ {
 filter __DeviceObject__ {
   $base = $_
   $obj = [pscustomobject]@{
-        ID = $base.id
+        ID = [int]($base.id)
         Name = $base.name
         AlternateName = $base.alternateName
         Description = $base.description
         IPAddress = $base.ip
-        SNMPCapable = $base.snmpCapable -as [bool]
-        SNMPPort = $base.snmpPort
-        SNMPVersion = $base.snmpVersion
+        SNMPCapable = [int]($base.snmpCapable) -as [bool]
+        SNMPPort = [int]($base.snmpPort)
+        SNMPVersion = [int]($base.snmpVersion)
         SNMPROCommunity = $base.snmpRoCommunity
         snmpRwCommunity = $base.snmpRwCommunity
         synchronizeInterfaces = $base.synchronizeInterfaces
         synchronizeObjectsAdminStatus = $base.synchronizeObjectsAdminStatus
         synchronizeObjectsOperStatus = $base.synchronizeObjectsOperStatus
-        peer = $base.peer
-        pollFrequency = $base.pollFrequency
-        elementCount = $base.elementCount
-        discoverStatus = $base.discoverStatus
+        peerID = $base.peer
+        pollFrequency = [int]($base.pollFrequency)
+        elementCount = [int]($base.elementCount)
+        discoverStatus = [int]($base.discoverStatus)
         discoverPriority = $base.discoverPriority
-        brokenStatus = $base.brokenStatus -as [bool]
-        isNew = $base.isNew -as [bool]
-        isDeleted = $base.isDeleted -as [bool]
-        allowAutomaticDiscovery = $base.allowAutomaticDiscovery -as [bool]
-        allowManualDiscovery = $base.allowManualDiscovery -as [bool]
+        brokenStatus = [int]($base.brokenStatus) -as [bool]
+        isNew = [int]($base.isNew) -as [bool]
+        isDeleted = [int]($base.isDeleted) -as [bool]
+        allowAutomaticDiscovery = [int]($base.allowAutomaticDiscovery) -as [bool]
+        allowManualDiscovery = [int]($base.allowManualDiscovery) -as [bool]
         osId = $base.osId
         lastDiscovery = $base.lastDiscovery -as [datetime]
         snmpStatus = $base.snmpStatus
         icmpStatus = $base.icmpStatus
-        disableDiscovery = $base.disableDiscovery -as [bool]
-        disableThresholding = $base.disableThresholding -as [bool]
-        disablePolling = $base.disablePolling -as [bool]
+        disableDiscovery = [int]($base.disableDiscovery) -as [bool]
+        disableThresholding = [int]($base.disableThresholding) -as [bool]
+        disablePolling = [int]($base.disablePolling) -as [bool]
+        TimeZone = $Base.timezone
+        RawXML = @{XML = $base}
       }
   $obj.PSObject.TypeNames.Insert(0,'SevOne.Device.DeviceInfo')
   $obj
@@ -128,23 +129,23 @@ filter __DeviceObject__ {
  
 filter __ThresholdObject__ {
   $obj = [pscustomobject]@{
-      id = $_.id  
+      id = [int]($_.id  )
       name = $_.name
       description = $_.description 
-      deviceId = $_.deviceId 
-      policyId = $_.policyId 
+      deviceId = [int]($_.deviceId)
+      policyId = [int]($_.policyId)
       severity = $_.severity
-      groupId  = $_.groupId 
+      groupId  = [int]($_.groupId)
       isDeviceGroup = $_.isDeviceGroup
       triggerExpression = $_.triggerExpression
       clearExpression = $_.clearExpression
-      userEnabled = $_.userEnabled -as [bool]
-      policyEnabled = $_.policyEnabled -as [bool]
-      timeEnabled = $_.timeEnabled -as [bool]
+      userEnabled = [int]($_.userEnabled) -as [bool]
+      policyEnabled = [int]($_.policyEnabled) -as [bool]
+      timeEnabled = [int]($_.timeEnabled) -as [bool]
       mailTo = $_.mailTo 
       mailOnce = $_.mailOnce 
       mailPeriod = $_.mailPeriod 
-      lastUpdated = $_.lastUpdated 
+      lastUpdated = $_.lastUpdated -as [datetime] 
       useDefaultTraps = $_.useDefaultTraps
       useDeviceTraps = $_.useDeviceTraps
       useCustomTraps = $_.useCustomTraps
@@ -158,15 +159,15 @@ filter __ThresholdObject__ {
 
 filter __AlertObject__ {
   $obj = [pscustomobject]@{
-      id = $_.id 
+      id = [int]($_.id)
       severity = $_.severity
-      isCleared = $_.isCleared -as [bool]
+      isCleared = [int]($_.isCleared) -as [bool]
       origin = $_.origin 
-      deviceId = $_.deviceId
+      deviceId = [int]($_.deviceId)
       pluginName = $_. pluginName
-      objectId = $_.objectId 
-      pollId = $_.pollId
-      thresholdId = $_.thresholdId
+      objectId = [int]($_.objectId) 
+      pollId = [int]($_.pollId)
+      thresholdId = [int]($_.thresholdId)
       startTime = $_.Starttime | __fromUNIXTime__
       endTime = $_.endTime | __fromUNIXTime__
       message = $_.message 
@@ -175,7 +176,7 @@ filter __AlertObject__ {
       clearMessage = $_.clearMessage 
       acknowledgedBy = $_.acknowledgedBy
       number = $_.number
-      automaticallyProcessed = $_.automaticallyProcessed
+      automaticallyProcessed = [int]($_.automaticallyProcessed) -as [bool]
     }
   $obj.PSObject.TypeNames.Insert(0,'SevOne.Alert.AlertInfo')
   $obj
@@ -184,7 +185,7 @@ filter __AlertObject__ {
 filter __ObjectClass__ {
   $obj = [pscustomobject]@{
       Name = $_.name
-      Id = $_.id
+      Id = [int]($_.id)
     }
   $obj.PSObject.TypeNames.Insert(0,'SevOne.Class.ObjectClass')
   $obj
@@ -193,8 +194,8 @@ filter __ObjectClass__ {
 filter __DeviceGroupObject__ {
   $base = $_ 
   $obj = [pscustomobject]@{
-      ID = $base.id
-      ParentGroupID = $base.parentid
+      ID = [int]($base.id)
+      ParentGroupID = [int]($base.parentid)
       Name = $base.name
     }
   $obj.PSObject.TypeNames.Insert(0,'SevOne.Group.DeviceGroup')
@@ -204,8 +205,8 @@ filter __DeviceGroupObject__ {
 filter __ObjectGroupObject__ {
   $base = $_ 
   $obj = [pscustomobject]@{
-      ID = $base.id
-      ParentGroupID = $base.parentid
+      ID = [int]($base.id)
+      ParentGroupID = [int]($base.parentid)
       Name = $base.name
     }
   $obj.PSObject.TypeNames.Insert(0,'SevOne.Group.ObjectGroup')
@@ -217,7 +218,7 @@ filter __PeerObject__ {
       serverId = $_.ServerId 
       name = $_.name 
       ip = $_.ip
-      is64bit = $_.is64bit
+      is64bit = [int]($_.is64bit) -as [bool]
       memory = $_.memory
       isMaster = $_.isMaster 
       username = $_.username 
@@ -881,6 +882,7 @@ param (
     [Parameter(
     ValueFromPipelineByPropertyName,
     ParameterSetName='group')]
+    [ValidateLength(1,255)]
     [string]$Description = '',
 
     #
@@ -922,7 +924,7 @@ process {
 end {}
 }
 
-function Set-SevOneDevice {
+function Set-SevOneDevice { # currently a pretty sad function, we can change the polling interval and the timezone.
 <##>
 [cmdletBinding(DefaultParameterSetName='default')]
 param ( 
@@ -933,7 +935,7 @@ param (
     ParameterSetName='default')]
     $Device,
        
-    #
+    
     [Parameter(
     ValueFromPipelineByPropertyName,
     ParameterSetName='default')]
@@ -970,11 +972,13 @@ param (
     ParameterSetName='default')]
     [timespan]$PollingInterval,
 
-    #
+    
     [Parameter(
     ValueFromPipelineByPropertyName,
     ParameterSetName='default')]
     [bool]$Polling
+
+    
   )
 begin {
     Write-Verbose 'Starting operation'
@@ -986,6 +990,7 @@ begin {
   }
 process {
     Write-Verbose "Opening Process block for $($Device.name)"
+    
     $xml = $global:SevOne.core_getDeviceById($device.id)
     Write-Debug 'loaded $xml'
     #region SetValues
@@ -998,11 +1003,22 @@ process {
     #if ($PollingConcurrency) {$xml.p}
     if ($Polling) {$xml.disablePolling = [int](-not $Polling) }
     #if ($DiscoveryLevel) {$xml.discoverPriority = }
+    if ($SNMPVersion) {$xml.snmpVersion = $SNMPVersion}
+    if ($SNMPROCommunity) {$xml.snmpRoCommunity = $SNMPROCommunity}
+    if ($SNMPRwCommunity) {$xml.snmpRwCommunity = $SNMPRwCommunity}
     Write-Debug 'Finished modifying XML'
     #endregion SetValues
     $return = $global:SevOne.core_setDeviceInformation($xml)
     Write-Debug 'Finished setting device, $return is about to be tested'
     $return | __TestReturn__
+    <#if ($TimeZone) {
+        $return = $Global:SevOne.core_setDeviceTimezone($device.id, $TimeZone)
+        $return | __TestReturn__
+      }
+    if ($PollingInterval) {
+        $return = $Global:SevOne.core_setDevicePollingFrequency($device.id, $PollingInterval.TotalSeconds)
+        $return | __TestReturn__
+      }#>
     Write-Verbose "Succesfully modified $($device.name)"
   }
 }
@@ -1285,8 +1301,10 @@ function Get-SevOneWMIProxy {
     At this point there is no support for wildcards.
 #>
 [cmdletbinding(DefaultParameterSetName='default')]
-param
-  (
+param (
+    [Parameter(Mandatory,
+    ParameterSetName='filter')]
+    $filter
   )
 begin {
     if (-not (__TestSevOneConnection__)) {
@@ -1300,7 +1318,9 @@ process {
       {
         'default' { $Global:SevOne.plugin_wmi_findProxy('') ; continue}
         'filter' {
-            $filter = 'somevalue' #Build filter in jagged array 
+            Write-Debug 'in filter block'
+            $Global:SevOne.plugin_wmi_findProxy($filter)
+            Write-Debug 'finished finding proxies'
             #filter = ,@('Name',$name),@('ip',$ip)         
           }
       }
@@ -1570,6 +1590,52 @@ process {
 
 function Set-SevOnePollingInterval {}
 
-#function Set-SevOneDevice {}
+function Set-SevOneSNMPPlugin {
+[cmdletbinding()]
+param (
+    [Parameter(Mandatory,
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    $Device,
+    [Parameter(
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    [Bool]$SNMPCapable = $true,
+
+    [Parameter(
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    [int]$SNMPVersion = 2,
+
+    [Parameter(
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    [string]$SNMPROCommunity = '',
+
+    [Parameter(
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    [string]$SNMPRwCommunity = '',
+
+    [Parameter(
+    ValueFromPipelineByPropertyName,
+    ParameterSetName='default')]
+    [int]$SNMPPort = 161
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    Write-Debug ''
+    $return = $Global:SevOne.core_setDeviceSnmpInformation($Device.id,[int]($SNMPCapable),$SNMPPort,$SNMPVersion,$SNMPROCommunity,$SNMPRwCommunity)
+    $return | __TestReturn__
+  }
+}
 
 Export-ModuleMember -Function *-* 
