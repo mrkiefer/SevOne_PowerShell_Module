@@ -12,7 +12,7 @@ $SevOne = $null
 
 # for object group the device group is required
 
-function get-sevoneobject {} # accept a device throught the pipeline
+
 
 function __TestReturn__ {
     param (
@@ -366,6 +366,227 @@ process {
   }
 }
 
+function Get-SevOneObject {
+<##>
+[cmdletbinding(DefaultParameterSetName='device')]
+param (
+    # The Device that will be associated with Alarms pulled
+    [parameter(Mandatory,
+    Position=0,
+    ValueFromPipelineByPropertyName,
+    ValueFromPipeline,
+    ParameterSetName='Device')]
+    [parameter(Mandatory,
+    Position=0,
+    ParameterSetName='Plugin')]
+    [PSObject]$Device,
+
+    #
+    [parameter(
+    Position=1,
+    ValueFromPipelineByPropertyName,
+    ValueFromPipeline,
+    ParameterSetName='Plugin')]
+    [ValidateSet(
+      'COC',
+      'CALLMANAGER',
+      'CALLMANAGERCDR',
+      'DEFERRED',
+      'DNS',
+      'HTTP',
+      'ICMP',
+      'IPSLA',
+      'JMX',
+      'MYSQLDB',
+      'NBAR',
+      'ORACLEDB',
+      'PORTSHAKER',
+      'PROCESS',
+      'PROXYPING',
+      'SNMP',
+      'CALLD',
+      'VMWARE',
+      'WEBSTATUS',
+      'WMI',
+      'BULKDATA'
+    )]
+    [string]$Plugin
+  )
+begin {
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+  }
+process {
+    switch ($PSCmdlet.ParameterSetName)
+      {
+        'device' {$return = $Global:SevOne.core_getObjectsByDeviceID($device.id)}
+        'plugin' {$return = $Global:SevOne.core_getObjectsByDeviceIDAndPlugin($device.id,$Plugin)}
+      }
+    $return
+  }
+} # accept a device throught the pipeline
+
+function Out-SevOneDeferredData {
+[cmdletbinding()]
+param (
+    $IndicatorID,
+    $Device,
+    $value  
+  )
+begin {
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+  }
+process {
+    $return = $Global:SevOne.plugin_deferred_insertDataRow($Device.ID,$IndicatorID,$value)
+    $return | __TestReturn__
+  }
+}
+
+function New-SevOneObject { 
+<##>
+[cmdletbinding(DefaultParameterSetName='device')]
+param (
+    #
+    [parameter(Mandatory,
+    Position=0,
+    ValueFromPipelineByPropertyName,
+    ValueFromPipeline,
+    ParameterSetName='Plugin')]
+    $Name,
+    
+    #
+    [parameter(Mandatory,
+    Position=1,
+    ValueFromPipelineByPropertyName,
+    ValueFromPipeline,
+    ParameterSetName='Plugin')]
+    $ObjectType,
+
+    # The Device that will be associated with Alarms pulled
+    [parameter(Mandatory,
+    Position=2,
+    ValueFromPipelineByPropertyName,
+    ValueFromPipeline,
+    ParameterSetName='Plugin')]
+    [PSObject]$Device,
+
+    #
+    [parameter(Mandatory,
+    Position=3,
+    ValueFromPipelineByPropertyName,
+    ValueFromPipeline,
+    ParameterSetName='Plugin')]
+    [ValidateSet(
+      'COC',
+      'CALLMANAGER',
+      'CALLMANAGERCDR',
+      'DEFERRED',
+      'DNS',
+      'HTTP',
+      'ICMP',
+      'IPSLA',
+      'JMX',
+      'MYSQLDB',
+      'NBAR',
+      'ORACLEDB',
+      'PORTSHAKER',
+      'PROCESS',
+      'PROXYPING',
+      'SNMP',
+      'CALLD',
+      'VMWARE',
+      'WEBSTATUS',
+      'WMI',
+      'BULKDATA'
+    )]
+    [string]$Plugin
+  )
+begin {
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    $method = "plugin_$plugin`_getObjectTypes"
+    $types = $Global:SevOne.$method()
+    if ($ObjectType -notin $types.name)
+      {throw 'no such type exists'}
+    $objectTypeID = $types.where{$_.name -match $ObjectType}.id
+  }
+process {
+    switch ($PSCmdlet.ParameterSetName)
+      {
+        'plugin' {
+          $method = "plugin_$Plugin`_createobject"
+          $return = $Global:SevOne.$method($Device.id,$objectTypeID,$Name)
+          if ($return -eq 0)
+            {Write-Error "failed to create object : $Name"}
+          }
+      }
+  }
+}
+
+function Get-SevOneIndicator {
+<##>
+[cmdletbinding(DefaultParameterSetName='plugin')]
+param (
+    # The Device that will be associated with Alarms pulled
+    [parameter(Mandatory,
+    Position=0,
+    ValueFromPipelineByPropertyName,
+    ValueFromPipeline,
+    ParameterSetName='Plugin')]
+    [PSObject]$Device,
+
+    #
+    [parameter(Mandatory,
+    Position=1,
+    ValueFromPipelineByPropertyName,
+    ValueFromPipeline,
+    ParameterSetName='Plugin')]
+    [ValidateSet(
+      'COC',
+      'CALLMANAGER',
+      'CALLMANAGERCDR',
+      'DEFERRED',
+      'DNS',
+      'HTTP',
+      'ICMP',
+      'IPSLA',
+      'JMX',
+      'MYSQLDB',
+      'NBAR',
+      'ORACLEDB',
+      'PORTSHAKER',
+      'PROCESS',
+      'PROXYPING',
+      'SNMP',
+      'CALLD',
+      'VMWARE',
+      'WEBSTATUS',
+      'WMI',
+      'BULKDATA'
+    )]
+    [string]$Plugin
+  )
+begin {
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+  }
+process {
+    switch ($PSCmdlet.ParameterSetName)
+      {
+        'plugin' {
+            $method = "plugin_$plugin`_getIndicatorsByDeviceId"
+            $return = $Global:SevOne.$method($Device.id)
+          }
+      }
+    $return
+  }
+}
+
 function Get-SevOneDevice {
 <#
   .SYNOPSIS
@@ -644,6 +865,11 @@ param (
     ParameterSetName='Name')]
     [string]$Name,
 
+    # Specify the name of the Parent Group
+    [Parameter(
+    ParameterSetName='Name')]
+    [string]$ParentGroup = $null,
+     
     #
     [Parameter(Mandatory,
     ParameterSetName='ID')]
@@ -669,7 +895,7 @@ process {
           }
         'Name' {
             Write-Debug 'in Name block'
-            $return = $Global:SevOne.group_getDeviceGroupById($Global:SevOne.group_getDeviceGroupIdByName($Name,$null)) # only returning one result
+            $return = $Global:SevOne.group_getDeviceGroupById($Global:SevOne.group_getDeviceGroupIdByName($ParentGroup ,$Name)) # only returning one result
             Write-Debug "`$return has $($return.Count) members"
             continue
           }
@@ -957,6 +1183,7 @@ param (
     [Parameter(
     ValueFromPipelineByPropertyName,
     ParameterSetName='default')]
+    [validatelength(0,255)]
     [string]$Description = '',
 
     #
@@ -1501,6 +1728,11 @@ begin {
     Write-Debug 'finished begin block'
   }
 process {
+    $UserName = $Credential.UserName
+    if ($UserName -like '*\*')
+      {
+        $UserName = $UserName.Split('\')[-1]
+      }
     Set-SevOneWMIProxy -Enabled $true -Device $Device
     $return = $Global:SevOne.plugin_wmi_setProxy($Device.id,$Proxy.id)
     $return | __TestReturn__
@@ -1508,7 +1740,7 @@ process {
     $return | __TestReturn__
     $return = $Global:SevOne.plugin_wmi_setWorkgroup($device.id, $Domain)
     $return | __TestReturn__
-    $return = $Global:SevOne.plugin_wmi_setUsername($Device.id, $Credential.UserName)
+    $return = $Global:SevOne.plugin_wmi_setUsername($Device.id, $UserName)
     $return | __TestReturn__
     $return = $Global:SevOne.plugin_wmi_setPassword($Device.id, $Credential.GetNetworkCredential().Password)
     $return | __TestReturn__
@@ -1638,4 +1870,250 @@ process {
   }
 }
 
-Export-ModuleMember -Function *-* 
+function Set-SevOneWMIPlugin {
+<#
+  .SYNOPSIS
+
+  .DESCRIPTION
+
+  .EXAMPLE
+    
+  .EXAMPLE
+    
+  .EXAMPLE
+    
+  .NOTES
+    
+#>
+[cmdletbinding(DefaultParameterSetName='default')]
+param
+  (
+    #
+    [parameter(Mandatory,
+    ParameterSetName='Default',
+    ValueFromPipelineByPropertyName)]
+    [bool]$Enabled, 
+
+    #
+    [parameter(
+    ParameterSetName='Default',
+    ValueFromPipelineByPropertyName)]
+    $Device,
+
+    #
+    [parameter(
+    ParameterSetName='Default',
+    ValueFromPipelineByPropertyName)]
+    $Proxy,
+
+    #
+    [parameter(Mandatory,
+    ParameterSetName='Default',
+    ValueFromPipelineByPropertyName)]
+    [bool]$UseNTLM,
+
+    # Be sure to omit domain info
+    [parameter(
+    ParameterSetName='Default',
+    ValueFromPipelineByPropertyName)]
+    [pscredential]$Credential,
+
+    #
+    [parameter(
+    ParameterSetName='Default',
+    ValueFromPipelineByPropertyName)]
+    [string]$Domain,
+
+    #
+    [parameter(
+    ParameterSetName='Default',
+    ValueFromPipelineByPropertyName)]
+    [validateSet('Default','None','Connect','Call','Packet','PacketIntegrity','PacketPrivacy','Unchanged')]
+    [string]$AuthenticationLevel = 'default',
+
+    #
+    [parameter(
+    ParameterSetName='Default',
+    ValueFromPipelineByPropertyName)]
+    [validateSet('Default','Anonymous','Delegate','Identify','Impersonate')]
+    [string]$ImpersonationLevel = 'default'
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    $UserName = $Credential.UserName
+    if ($UserName -like '*\*')
+      {
+        $UserName = $UserName.Split('\')[-1]
+      }
+    switch ($Enabled) { 
+        $true {Set-SevOneWMIProxy -Enabled $true -Device $Device}
+        $false {Set-SevOneWMIProxy -Enabled $true -Device $Device}
+      }
+    if ($Proxy) { 
+        $return = $Global:SevOne.plugin_wmi_setProxy($Device.id,$Proxy.id)
+        $return | __TestReturn__
+      }
+    if ($UseNTLM)
+      {
+      $PSCmdlet.PagingParameters
+      }
+    $return = $Global:SevOne.plugin_wmi_setUseNTLM($Device.id,([int]$UseNTLM).ToString())
+    $return | __TestReturn__
+    $return = $Global:SevOne.plugin_wmi_setWorkgroup($device.id, $Domain)
+    $return | __TestReturn__
+    $return = $Global:SevOne.plugin_wmi_setUsername($Device.id, $UserName)
+    $return | __TestReturn__
+    $return = $Global:SevOne.plugin_wmi_setPassword($Device.id, $Credential.GetNetworkCredential().Password)
+    $return | __TestReturn__
+    $return = $Global:SevOne.plugin_wmi_setAuthenticationLevel($Device.id, $AuthenticationLevel)
+    $return | __TestReturn__
+    $return = $Global:SevOne.plugin_wmi_setImpersonationLevel($Device.id, $ImpersonationLevel)
+    $return | __TestReturn__
+  }
+}
+
+function Set-SevOneICMPPlugin {
+param (
+    #
+    [parameter(Mandatory,
+    ParameterSetName='Default',
+    ValueFromPipelineByPropertyName)]
+    [bool]$Enabled, 
+
+    #
+    [parameter(Mandatory,
+    ParameterSetName='Default',
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName)]
+    $Device
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    $return = $Global:Sevone.plugin_ICMP_enablepluginfordevice($Device.id,[int]$Enabled)
+    $return | __TestReturn__
+  }
+}
+
+function Get-SevOneEnabledPlugin {
+param (
+    #
+    [parameter(Mandatory,
+    ParameterSetName='Default',
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName)]
+    $Device
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    $return = $Global:SevOne.core_getEnabledPluginsByDeviceId($device.id)
+    $return | foreach {
+        [pscustomobject]@{
+            ComputerName = $Device.Name
+            Plugin = $_
+          }
+      }
+  }
+}
+
+function Get-SevOneReport {
+<##>
+[cmdletbinding(DefaultParameterSetName='default')]
+param (
+    [parameter(Mandatory,
+    parameterSetName='ID')]
+    [int]$ID
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    Switch ($PSCmdlet.ParameterSetName)
+      {
+        'default' {$Global:SevOne.report_getReports()}
+        'id' {$Global:SevOne.report_getReportById($ID) }
+      }
+    
+  }
+end {}
+}
+
+function Get-SevOneReportAttachment {
+<##>
+[cmdletbinding(DefaultParameterSetName='id')]
+param (
+    [parameter(Mandatory,
+    ValueFromPipeline,
+    ValueFromPipelinebyPropertyName,
+    parameterSetName='id')]
+    [Alias('ReportID')]
+    [int]$ID
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    Switch ($PSCmdlet.ParameterSetName)
+      {
+        'id' {$Global:SevOne.report_getReportAttachmentsByReportId($ID) }
+      }
+  }
+end {}
+}
+
+function get-SevOneGraph {
+<##>
+[cmdletbinding(DefaultParameterSetName='id')]
+param (
+    [parameter(Mandatory,
+    parameterSetName='id')]
+    $Attachment
+  )
+begin {
+    Write-Verbose 'Starting operation'
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    Write-Verbose 'Connection verified'
+    Write-Debug 'finished begin block'
+  }
+process {
+    Switch ($PSCmdlet.ParameterSetName)
+      {
+        'id' {$Global:SevOne.report_getGraphAttachment($Attachment) }
+      }
+  }
+end {}
+}
+
+Export-ModuleMember -Function *-* -Variable ''
