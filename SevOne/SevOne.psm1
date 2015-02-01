@@ -1,6 +1,23 @@
 #requires -version 3.0
 $SevOne = $null
 
+<#
+Author's notes:
+
+The module is working for basic provisioning but is still pretty far from being fully functional.
+I have two serious concerns at the moment.
+
+1 - The module will need to implement a proper class system, either from .NET or PS V5 in the 
+near future.  The current system of type conversion functions is hokey and unsustainable.
+
+2 - The SevOne API's WSDL file may have some issues with .NET.  It looks like some of the factory
+classes return malformed xml.  The module is being tested against 5.3.5 and is currently unable to
+deliver a properly formed SO_Trend object.  
+
+At the point anyone is ready to contribute to this module please contact me @ jason.morgan@verizon.com
+#>
+
+
 #$TimeZones = Get-Content -Path $PSScriptRoot\timezones.txt
 # Indicators, Objects
 
@@ -32,8 +49,9 @@ function __TestReturn__ {
     }
 
 function __TestSevOneConnection__ {
+  Write-Verbose 'testing API connection by calling the returnthis() method'
   Write-Debug 'Begin test'
-  try {[bool]$Global:SevOne.returnthis(1)} catch {$false}
+  try {[bool]$SevOne.returnthis(1)} catch {$false}
 }
 
 Function __fromUNIXTime__ {
@@ -52,6 +70,9 @@ Process
 }
 
 function __SevOneType__ {
+<#
+This is a point of concern, we need to get real object classes in the near future
+#>
 [cmdletbinding()]
 param(
     [parameter(Mandatory,
@@ -281,7 +302,11 @@ function Connect-SevOne {
 
     # Set this option if you are connecting via SSL
     [Parameter(ParameterSetName='Default')]
-    [switch]$UseSSL
+    [switch]$UseSSL,
+
+    # Set this option if you would like to expose the SevOne SOAP API Object
+    [Parameter(ParameterSetName='Default')]
+    [switch]$ExposeAPI
   )
 Write-Debug 'starting connection process'
 Write-Debug "`$UseSSL is $UseSSL"
@@ -310,7 +335,8 @@ catch {
     Write-Debug 'In failure block for $client.authenticate()'
     Throw 'Unable to authenticate with the SevOne Appliance'
   }
-    $Global:SevOne = $Client
+    $Script:SevOne = $Client
+    if ($ExposeAPI) {$Client}
     Write-Verbose 'Successfully connected to SevOne Appliance'
 }
 
@@ -354,11 +380,11 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'default' {
-            $return = $Global:SevOne.core_getPeers()
+            $return = $SevOne.core_getPeers()
             continue
           }
         'id' {
-            $return = $Global:SevOne.core_getPeerById($id)
+            $return = $SevOne.core_getPeerById($id)
             continue
           }
       }
@@ -420,8 +446,8 @@ begin {
 process {
     switch ($PSCmdlet.ParameterSetName)
       {
-        'device' {$return = $Global:SevOne.core_getObjectsByDeviceID($device.id)}
-        'plugin' {$return = $Global:SevOne.core_getObjectsByDeviceIDAndPlugin($device.id,$Plugin)}
+        'device' {$return = $SevOne.core_getObjectsByDeviceID($device.id)}
+        'plugin' {$return = $SevOne.core_getObjectsByDeviceIDAndPlugin($device.id,$Plugin)}
       }
     $return
   }
@@ -440,7 +466,7 @@ begin {
       }
   }
 process {
-    $return = $Global:SevOne.plugin_deferred_insertDataRow($Device.ID,$IndicatorID,$value)
+    $return = $SevOne.plugin_deferred_insertDataRow($Device.ID,$IndicatorID,$value)
     $return | __TestReturn__
   }
 }
@@ -509,7 +535,7 @@ begin {
         throw 'Not connected to a SevOne instance'
       }
     $method = "plugin_$plugin`_getObjectTypes"
-    $types = $Global:SevOne.$method()
+    $types = $SevOne.$method()
     if ($ObjectType -notin $types.name)
       {throw 'no such type exists'}
     $objectTypeID = $types.where{$_.name -match $ObjectType}.id
@@ -519,7 +545,7 @@ process {
       {
         'plugin' {
           $method = "plugin_$Plugin`_createobject"
-          $return = $Global:SevOne.$method($Device.id,$objectTypeID,$Name)
+          $return = $SevOne.$method($Device.id,$objectTypeID,$Name)
           if ($return -eq 0)
             {Write-Error "failed to create object : $Name"}
           }
@@ -580,7 +606,7 @@ process {
       {
         'plugin' {
             $method = "plugin_$plugin`_getIndicatorsByDeviceId"
-            $return = $Global:SevOne.$method($Device.id)
+            $return = $SevOne.$method($Device.id)
           }
       }
     $return
@@ -644,7 +670,7 @@ process {
       {
         'default' { 
             Write-Debug 'in default block'
-            try {$return = $Global:SevOne.core_getDevices()} catch {
+            try {$return = $SevOne.core_getDevices()} catch {
                 $return = $null
                 Write-Error $_.exception.message
               }
@@ -653,7 +679,7 @@ process {
         'Name' { 
             Write-Debug 'in name block'
             try {
-                $return =  $Global:SevOne.core_getDeviceByName($Name)
+                $return =  $SevOne.core_getDeviceByName($Name)
                 Write-Debug 'Test $return to ensure object is not blank'
                 if (-not $return.id)
                   {throw "Empty object returned for $Name"}
@@ -667,7 +693,7 @@ process {
           }
         'ID' { 
             Write-Debug 'in id block'
-            try {$return = $Global:SevOne.core_getDeviceById($ID)} catch {
+            try {$return = $SevOne.core_getDeviceById($ID)} catch {
                 $return = $null
                 Write-Error "No device found with id: $id"
                 Write-Error $_.exception.message
@@ -677,7 +703,7 @@ process {
         'IPAddress' { 
             Write-Debug 'in IPAddress block'
             try {
-                $return = $Global:SevOne.core_getDeviceById(($Global:SevOne.core_getDeviceIdByIp($IPAddress.IPAddressToString)))
+                $return = $SevOne.core_getDeviceById(($SevOne.core_getDeviceIdByIp($IPAddress.IPAddressToString)))
               } 
             catch {
                 $return = $null
@@ -743,10 +769,10 @@ process
     switch ($PSCmdlet.ParameterSetName)
       {
         'default' {
-            $return = $Global:SevOne.alert_getAlerts(0)
+            $return = $SevOne.alert_getAlerts(0)
           }
         'device' {
-            $return = $Global:SevOne.alert_getAlertsByDeviceId($Device.id,0)
+            $return = $SevOne.alert_getAlertsByDeviceId($Device.id,0)
           }
       }
     foreach ($a in ($return | __AlertObject__))
@@ -802,7 +828,7 @@ begin {
   }
 process{
     try {
-        $return = $Global:SevOne.alert_clearByAlertId($Alert.ID,$Message) 
+        $return = $SevOne.alert_clearByAlertId($Alert.ID,$Message) 
       }
     catch {}
   }
@@ -832,7 +858,7 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'default' {
-            $return = $Global:SevOne.core_getPlugins()
+            $return = $SevOne.core_getPlugins()
           }
       }
     $return | __PluginObject__
@@ -889,19 +915,19 @@ process {
       {
         'Default' {
             Write-Debug 'in Default block'
-            $return = $Global:SevOne.group_getDeviceGroups()
+            $return = $SevOne.group_getDeviceGroups()
             Write-Debug "`$return has $($return.Count) members"
             continue
           }
         'Name' {
             Write-Debug 'in Name block'
-            $return = $Global:SevOne.group_getDeviceGroupById($Global:SevOne.group_getDeviceGroupIdByName($ParentGroup ,$Name)) # only returning one result
+            $return = $SevOne.group_getDeviceGroupById($SevOne.group_getDeviceGroupIdByName($ParentGroup ,$Name)) # only returning one result
             Write-Debug "`$return has $($return.Count) members"
             continue
           }
         'ID' {
             Write-Debug 'in ID block'
-            $return = $Global:SevOne.group_getDeviceGroupById($ID)
+            $return = $SevOne.group_getDeviceGroupById($ID)
             Write-Debug "`$return has $($return.Count) members"
             continue
           }
@@ -965,11 +991,11 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'group' {
-            $return = $Global:SevOne.group_createDeviceGroup($Name,$ParentGroup.ID)
+            $return = $SevOne.group_createDeviceGroup($Name,$ParentGroup.ID)
             Write-Debug 'Finished generating $return'
           }
         'id' {
-             $return = $Global:SevOne.group_createDeviceGroup($Name,$ParentID)
+             $return = $SevOne.group_createDeviceGroup($Name,$ParentID)
              Write-Debug 'Finished generating $return'
           }
       }
@@ -1028,7 +1054,7 @@ process {
         switch ($Target | __SevOneType__)
           {
             'deviceGroup' {
-                $return = $Global:SevOne.group_deleteDeviceGroup($Target.id)
+                $return = $SevOne.group_deleteDeviceGroup($Target.id)
                 Write-Debug 'finished generating $return'
                 if ($return -ne 1) {
                     Write-Debug 'in failure block'
@@ -1037,7 +1063,7 @@ process {
                 continue
               }
             'ObjectGroup' {
-                $return = $Global:SevOne.group_deleteObjectGroup($Target.id)
+                $return = $SevOne.group_deleteObjectGroup($Target.id)
                 Write-Debug 'finished generating $return'
                 if ($return -ne 1) {
                     Write-Debug 'in failure block'
@@ -1046,14 +1072,14 @@ process {
                 continue
               }
             'deviceClass' {
-                $return = $Global:SevOne.group_deleteDeviceClass($target.id)
+                $return = $SevOne.group_deleteDeviceClass($target.id)
                 if ($return -ne 1) {
                     Write-Error "failed to delete $($Target.name)"
                   }
                 continue
               }
             'ObjectClass' {
-                $return = $Global:SevOne.group_deleteObjectClass($Target.id)
+                $return = $SevOne.group_deleteObjectClass($Target.id)
                 Write-Debug 'finished generating $return'
                 if ($return -ne 1) {
                     Write-Debug 'in failure block'
@@ -1062,7 +1088,7 @@ process {
                 continue
               }
             'device' {
-                $return = $Global:SevOne.core_deleteDevice($Target.id)
+                $return = $SevOne.core_deleteDevice($Target.id)
                 Write-Debug 'finished generating $return'
                 if ($return -ne 1) {
                     Write-Debug 'in failure block'
@@ -1130,7 +1156,7 @@ process {
       {
         'group' {
             Write-Debug 'In group block'
-            $return = $Global:SevOne.core_createDeviceInGroup($Name,$IPAddress.IPAddressToString,$Peer.id,$Description,$Group.id)
+            $return = $SevOne.core_createDeviceInGroup($Name,$IPAddress.IPAddressToString,$Peer.id,$Description,$Group.id)
             Write-Verbose 'finished create operation, testing $return'
             Write-Debug "`$return = $return"
             switch ($return)
@@ -1218,7 +1244,7 @@ begin {
 process {
     Write-Verbose "Opening Process block for $($Device.name)"
     
-    $xml = $global:SevOne.core_getDeviceById($device.id)
+    $xml = $SevOne.core_getDeviceById($device.id)
     Write-Debug 'loaded $xml'
     #region SetValues
     if ($Name) {$xml.name = $Name}
@@ -1235,15 +1261,15 @@ process {
     if ($SNMPRwCommunity) {$xml.snmpRwCommunity = $SNMPRwCommunity}
     Write-Debug 'Finished modifying XML'
     #endregion SetValues
-    $return = $global:SevOne.core_setDeviceInformation($xml)
+    $return = $SevOne.core_setDeviceInformation($xml)
     Write-Debug 'Finished setting device, $return is about to be tested'
     $return | __TestReturn__
     <#if ($TimeZone) {
-        $return = $Global:SevOne.core_setDeviceTimezone($device.id, $TimeZone)
+        $return = $SevOne.core_setDeviceTimezone($device.id, $TimeZone)
         $return | __TestReturn__
       }
     if ($PollingInterval) {
-        $return = $Global:SevOne.core_setDevicePollingFrequency($device.id, $PollingInterval.TotalSeconds)
+        $return = $SevOne.core_setDevicePollingFrequency($device.id, $PollingInterval.TotalSeconds)
         $return | __TestReturn__
       }#>
     Write-Verbose "Succesfully modified $($device.name)"
@@ -1299,15 +1325,15 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'Name' {
-            $return = $Global:SevOne.threshold_getThresholdByName($Device.id,$Name)
+            $return = $SevOne.threshold_getThresholdByName($Device.id,$Name)
             continue
           }
         'Device' {
-            $return = $Global:SevOne.threshold_getThresholdsByDevice($Device.id,$Pluggin.id,$Object.id,$Indicator.id)
+            $return = $SevOne.threshold_getThresholdsByDevice($Device.id,$Pluggin.id,$Object.id,$Indicator.id)
             continue
           }
         'ID' {
-            $return = $Global:SevOne.threshold_getThresholdById($Device.id,$ID)
+            $return = $SevOne.threshold_getThresholdById($Device.id,$ID)
             continue
           }
       }
@@ -1342,13 +1368,13 @@ process {
       {
         'Default' {
             Write-Debug 'in Default block'
-            $return = $Global:SevOne.group_getObjectGroups()
+            $return = $SevOne.group_getObjectGroups()
             Write-Debug "`$return has $($return.Count) members"
             continue
           }
         'ID' {
             Write-Debug 'in ID block'
-            $return = $Global:SevOne.group_getObjectGroupById($ID)
+            $return = $SevOne.group_getObjectGroupById($ID)
             Write-Debug "`$return has $($return.Count) members"
             continue
           }
@@ -1387,15 +1413,15 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'Default' {
-            $return = $Global:SevOne.group_getObjectClasses()
+            $return = $SevOne.group_getObjectClasses()
             continue
           }
         'Name' {
-            $return = $Global:SevOne.group_getObjectClassByName($Name)
+            $return = $SevOne.group_getObjectClassByName($Name)
             continue
           }
         'ID' {
-            $return = $Global:SevOne.group_getObjectClassById($ID)
+            $return = $SevOne.group_getObjectClassById($ID)
             continue
           }
       }
@@ -1438,10 +1464,10 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'default' {
-            $return = $Global:SevOne.group_addDeviceToGroup($Device.ID,$Group.ID)
+            $return = $SevOne.group_addDeviceToGroup($Device.ID,$Group.ID)
           }
         'ID' {
-            $return = $Global:SevOne.group_addDeviceToGroup($DeviceID,$GroupID)
+            $return = $SevOne.group_addDeviceToGroup($DeviceID,$GroupID)
           }
       }
     switch ($return)
@@ -1494,7 +1520,7 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'default' {
-            $return = $Global:SevOne.group_addObjectToGroup($Device.id,$Object.id,$Group.id,$Plugin.id)
+            $return = $SevOne.group_addObjectToGroup($Device.id,$Object.id,$Group.id,$Plugin.id)
           }
       }
     switch ($return)
@@ -1543,10 +1569,10 @@ process {
     Write-Debug "Switch on parameter set name, current value: $($PSCmdlet.ParameterSetName)"
     switch ($PSCmdlet.ParameterSetName)
       {
-        'default' { $Global:SevOne.plugin_wmi_findProxy('') ; continue}
+        'default' { $SevOne.plugin_wmi_findProxy('') ; continue}
         'filter' {
             Write-Debug 'in filter block'
-            $Global:SevOne.plugin_wmi_findProxy($filter)
+            $SevOne.plugin_wmi_findProxy($filter)
             Write-Debug 'finished finding proxies'
             #filter = ,@('Name',$name),@('ip',$ip)         
           }
@@ -1599,7 +1625,7 @@ process {
     Write-Verbose 'begin process block'
     switch ($PSCmdlet.ParameterSetName)
       {
-        'default' {$return = $Global:SevOne.plugin_wmi_createProxy($Name,$IPAddress.IPAddressToString,$Port.ToString()) }
+        'default' {$return = $SevOne.plugin_wmi_createProxy($Name,$IPAddress.IPAddressToString,$Port.ToString()) }
       }
     switch ($return)
       {
@@ -1647,7 +1673,7 @@ begin {
       }
   }
 process {
-    $return = $Global:SevOne.plugin_wmi_enablePluginForDevice($Device.id, [int]$Enabled)
+    $return = $SevOne.plugin_wmi_enablePluginForDevice($Device.id, [int]$Enabled)
     switch ($return)
       {
         0 {Write-Error "Failed to set WMI plugin on $($Device.name)" ; continue}
@@ -1734,19 +1760,19 @@ process {
         $UserName = $UserName.Split('\')[-1]
       }
     Set-SevOneWMIProxy -Enabled $true -Device $Device
-    $return = $Global:SevOne.plugin_wmi_setProxy($Device.id,$Proxy.id)
+    $return = $SevOne.plugin_wmi_setProxy($Device.id,$Proxy.id)
     $return | __TestReturn__
-    $return = $Global:SevOne.plugin_wmi_setUseNTLM($Device.id,([int]$UseNTLM).ToString())
+    $return = $SevOne.plugin_wmi_setUseNTLM($Device.id,([int]$UseNTLM).ToString())
     $return | __TestReturn__
-    $return = $Global:SevOne.plugin_wmi_setWorkgroup($device.id, $Domain)
+    $return = $SevOne.plugin_wmi_setWorkgroup($device.id, $Domain)
     $return | __TestReturn__
-    $return = $Global:SevOne.plugin_wmi_setUsername($Device.id, $UserName)
+    $return = $SevOne.plugin_wmi_setUsername($Device.id, $UserName)
     $return | __TestReturn__
-    $return = $Global:SevOne.plugin_wmi_setPassword($Device.id, $Credential.GetNetworkCredential().Password)
+    $return = $SevOne.plugin_wmi_setPassword($Device.id, $Credential.GetNetworkCredential().Password)
     $return | __TestReturn__
-    $return = $Global:SevOne.plugin_wmi_setAuthenticationLevel($Device.id, $AuthenticationLevel)
+    $return = $SevOne.plugin_wmi_setAuthenticationLevel($Device.id, $AuthenticationLevel)
     $return | __TestReturn__
-    $return = $Global:SevOne.plugin_wmi_setImpersonationLevel($Device.id, $ImpersonationLevel)
+    $return = $SevOne.plugin_wmi_setImpersonationLevel($Device.id, $ImpersonationLevel)
     $return | __TestReturn__
   }
 }
@@ -1769,7 +1795,7 @@ begin {
     Write-Debug 'finished begin block'
   }
 process {
-    $return = $Global:SevOne.core_setDeviceDiscovery($Device.id,'1')
+    $return = $SevOne.core_setDeviceDiscovery($Device.id,'1')
     $return | __TestReturn__
   }
 }
@@ -1792,7 +1818,7 @@ begin {
     Write-Debug 'finished begin block'
   }
 process {
-    $return = $Global:SevOne.core_setDeviceDiscovery($Device.id,'0')
+    $return = $SevOne.core_setDeviceDiscovery($Device.id,'0')
     $return | __TestReturn__
   }
 }
@@ -1815,7 +1841,7 @@ begin {
     Write-Debug 'finished begin block'
   }
 process {
-    $return = $Global:SevOne.core_rediscoverDevice($Device.id)
+    $return = $SevOne.core_rediscoverDevice($Device.id)
     $return | __TestReturn__
   }
 }
@@ -1865,7 +1891,7 @@ begin {
   }
 process {
     Write-Debug ''
-    $return = $Global:SevOne.core_setDeviceSnmpInformation($Device.id,[int]($SNMPCapable),$SNMPPort,$SNMPVersion,$SNMPROCommunity,$SNMPRwCommunity)
+    $return = $SevOne.core_setDeviceSnmpInformation($Device.id,[int]($SNMPCapable),$SNMPPort,$SNMPVersion,$SNMPROCommunity,$SNMPRwCommunity)
     $return | __TestReturn__
   }
 }
@@ -1957,24 +1983,24 @@ process {
         $false {Set-SevOneWMIProxy -Enabled $true -Device $Device}
       }
     if ($Proxy) { 
-        $return = $Global:SevOne.plugin_wmi_setProxy($Device.id,$Proxy.id)
+        $return = $SevOne.plugin_wmi_setProxy($Device.id,$Proxy.id)
         $return | __TestReturn__
       }
     if ($UseNTLM)
       {
       $PSCmdlet.PagingParameters
       }
-    $return = $Global:SevOne.plugin_wmi_setUseNTLM($Device.id,([int]$UseNTLM).ToString())
+    $return = $SevOne.plugin_wmi_setUseNTLM($Device.id,([int]$UseNTLM).ToString())
     $return | __TestReturn__
-    $return = $Global:SevOne.plugin_wmi_setWorkgroup($device.id, $Domain)
+    $return = $SevOne.plugin_wmi_setWorkgroup($device.id, $Domain)
     $return | __TestReturn__
-    $return = $Global:SevOne.plugin_wmi_setUsername($Device.id, $UserName)
+    $return = $SevOne.plugin_wmi_setUsername($Device.id, $UserName)
     $return | __TestReturn__
-    $return = $Global:SevOne.plugin_wmi_setPassword($Device.id, $Credential.GetNetworkCredential().Password)
+    $return = $SevOne.plugin_wmi_setPassword($Device.id, $Credential.GetNetworkCredential().Password)
     $return | __TestReturn__
-    $return = $Global:SevOne.plugin_wmi_setAuthenticationLevel($Device.id, $AuthenticationLevel)
+    $return = $SevOne.plugin_wmi_setAuthenticationLevel($Device.id, $AuthenticationLevel)
     $return | __TestReturn__
-    $return = $Global:SevOne.plugin_wmi_setImpersonationLevel($Device.id, $ImpersonationLevel)
+    $return = $SevOne.plugin_wmi_setImpersonationLevel($Device.id, $ImpersonationLevel)
     $return | __TestReturn__
   }
 }
@@ -2003,7 +2029,7 @@ begin {
     Write-Debug 'finished begin block'
   }
 process {
-    $return = $Global:Sevone.plugin_ICMP_enablepluginfordevice($Device.id,[int]$Enabled)
+    $return = $Sevone.plugin_ICMP_enablepluginfordevice($Device.id,[int]$Enabled)
     $return | __TestReturn__
   }
 }
@@ -2026,7 +2052,7 @@ begin {
     Write-Debug 'finished begin block'
   }
 process {
-    $return = $Global:SevOne.core_getEnabledPluginsByDeviceId($device.id)
+    $return = $SevOne.core_getEnabledPluginsByDeviceId($device.id)
     $return | foreach {
         [pscustomobject]@{
             ComputerName = $Device.Name
@@ -2055,8 +2081,8 @@ begin {
 process {
     Switch ($PSCmdlet.ParameterSetName)
       {
-        'default' {$Global:SevOne.report_getReports()}
-        'id' {$Global:SevOne.report_getReportById($ID) }
+        'default' {$SevOne.report_getReports()}
+        'id' {$SevOne.report_getReportById($ID) }
       }
     
   }
@@ -2085,7 +2111,7 @@ begin {
 process {
     Switch ($PSCmdlet.ParameterSetName)
       {
-        'id' {$Global:SevOne.report_getReportAttachmentsByReportId($ID) }
+        'id' {$SevOne.report_getReportAttachmentsByReportId($ID) }
       }
   }
 end {}
@@ -2110,7 +2136,7 @@ begin {
 process {
     Switch ($PSCmdlet.ParameterSetName)
       {
-        'id' {$Global:SevOne.report_getGraphAttachment($Attachment) }
+        'id' {$SevOne.report_getGraphAttachment($Attachment) }
       }
   }
 end {}
