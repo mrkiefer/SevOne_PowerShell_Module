@@ -2117,7 +2117,7 @@ process {
 end {}
 }
 
-function get-SevOneGraph {
+function Get-SevOneGraph {
 <##>
 [cmdletbinding(DefaultParameterSetName='id')]
 param (
@@ -2141,5 +2141,187 @@ process {
   }
 end {}
 }
+
+function New-SevOneGraphDataSource {
+param (
+    [parameter(Mandatory,
+    ValueFromPipeline,
+    ValuefromPipelinebyPropertyName)]
+    $Indicator,
+    [ValidateSet(
+      'COC',
+      'CALLMANAGER',
+      'CALLMANAGERCDR',
+      'DEFERRED',
+      'DNS',
+      'HTTP',
+      'ICMP',
+      'IPSLA',
+      'JMX',
+      'MYSQLDB',
+      'NBAR',
+      'ORACLEDB',
+      'PORTSHAKER',
+      'PROCESS',
+      'PROXYPING',
+      'SNMP',
+      'CALLD',
+      'VMWARE',
+      'WEBSTATUS',
+      'WMI',
+      'BULKDATA'
+    )]
+    [string]$Plugin
+  )
+begin {}
+Process {
+    $GraphDataSource = $SevOne.factory_GraphDataSource()
+    $GraphDataSource.plugin = $Plugin
+    $GraphDataSource.objectName = $Indicator.objectName
+    $GraphDataSource.indicator = $Indicator.indicatorType
+    $GraphDataSource.deviceId = $Indicator.deviceId
+    $GraphDataSource
+  }
+}
+
+function New-SevOneGraph {
+param (
+    [parameter()]
+    [validateset(
+        'graph_line',
+        'graph_stack',
+        'graph_pie',
+        'graph_csv',
+        'graph_csv_readable'
+      )]
+    [string]$Type,
+    [psobject[]]$Source,
+    [bool]$Scaled, #must convert to int
+    [validateset('bits','bytes')]
+    [string]$DataType,
+    [validateset('total','rate')]
+    [string]$DisplayType,
+    [int]$Percentile # limit values from 0-100, if set set percentEnabled to 1
+  )
+process {
+    $graph = $SevOne.factory_Graph()
+    $graph.dataSources = $Source
+    $graph
+  }
+}
+
+function New-SevOneTimespan {
+param (
+    [parameter(Mandatory,
+    ParameterSetName='specific')]
+    [datetime]$Starttime,
+    [parameter(Mandatory,
+    ParameterSetName='specific')]
+    [datetime]$Endtime,
+    [parameter(Mandatory,
+    ParameterSetName='general')]
+    [validateset(
+        'past 8 hours',
+        'today', 
+        'yesterday', 
+        'past 24 hours', 
+        'this week', 
+        'last week', 
+        'past week', 
+        'this month', 
+        'last month', 
+        'past month', 
+        'this quarter', 
+        'last quarter', 
+        'past quarter'
+      )]
+    $Span
+  )
+  $Timespan = $sevOne.factory_Timespan()
+  switch ($PSCmdlet.ParameterSetName)
+    {
+      'specific' {
+          $Timespan.startTime = $Starttime | Convertto-UNIXTime
+          $Timespan.endTime = $Endtime | Convertto-UNIXTime
+        }
+      'general' {
+          $Timespan.simpleTimespan  
+        }  
+    }
+  $Timespan
+}
+
+function New-SevOneTrend {
+param ()
+$trend = $sevOne.factory_Trend()
+$trend.type = 'none'
+$trend
+}
+
+Function Convertto-UNIXTime {
+Param
+  (
+    [Parameter(Mandatory=$true,
+    Position=0,
+    ValueFromPipeline=$true)]
+    [datetime]$DateTime
+  )
+Process
+  {
+    [datetime]$origin = '1970-01-01 00:00:00'
+    ($DateTime - $origin).totalseconds 
+  }
+}
+
+Function ConvertFrom-UNIXTime {
+Param
+  (
+    [Parameter(Mandatory=$true,
+    Position=0,
+    ValueFromPipeline=$true)]
+    [int]$inputobject
+  )
+Process
+  {
+    [datetime]$origin = '1970-01-01 00:00:00'
+    $origin.AddSeconds($inputobject)
+  }
+}
+
+function Add-SevOneGraphtoReport {
+param (
+    [parameter(Mandatory)]
+    $Report,
+    [parameter(Mandatory)]
+    $Graph,
+    [parameter(Mandatory)]
+    [string]$Name,
+    [parameter(Mandatory)]
+    $Timespan,
+    [parameter(Mandatory)]
+    $Trend
+  )
+process {
+    $return = $SevOne.report_attachGraphToReport($report.id,$Name,$Graph,$timespan,$trend)
+
+  }
+}
+
+function New-SevOneReport {
+param (
+    [parameter(Mandatory)]
+    [string]$Name,
+
+    [switch]$PassThrough
+  )
+process {
+    $return = $SevOne.report_createReport($Name)
+    if ($PassThrough) {
+        $SevOne.report_getReportById($return)
+      }
+  }
+}
+
+
 
 Export-ModuleMember -Function *-* -Variable ''
