@@ -2221,6 +2221,7 @@ param (
     [parameter(Mandatory,
     ParameterSetName='general')]
     [validateset(
+        'past 4 hours',
         'past 8 hours',
         'today', 
         'yesterday', 
@@ -2230,13 +2231,15 @@ param (
         'past week', 
         'this month', 
         'last month', 
-        'past month', 
+        'past month',
+        'past 4 weeks', 
         'this quarter', 
         'last quarter', 
         'past quarter'
       )]
-    $Span
+    $SimpleTimespan
   )
+  $base = Get-Date
   $Timespan = $sevOne.factory_Timespan()
   switch ($PSCmdlet.ParameterSetName)
     {
@@ -2245,7 +2248,9 @@ param (
           $Timespan.endTime = $Endtime | Convertto-UNIXTime
         }
       'general' {
-          $Timespan.simpleTimespan  
+          $Timespan.startTime = $base | Convertto-UNIXTime
+          $Timespan.endTime = $base | Convertto-UNIXTime          
+          $Timespan.simpleTimespan  = $SimpleTimespan
         }  
     }
   $Timespan
