@@ -1557,7 +1557,18 @@ function Get-SevOneWMIProxy {
 param (
     [Parameter(Mandatory,
     ParameterSetName='filter')]
-    $filter
+    $filter,
+
+    [Parameter(Mandatory,
+    ParameterSetName='id')]
+    [alias('Proxyid')]
+    $ID,
+
+    [Parameter(Mandatory,
+    ParameterSetName='device',
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName)]
+    $Device
   )
 begin {
     if (-not (__TestSevOneConnection__)) {
@@ -1569,13 +1580,17 @@ process {
     Write-Debug "Switch on parameter set name, current value: $($PSCmdlet.ParameterSetName)"
     switch ($PSCmdlet.ParameterSetName)
       {
-        'default' { $SevOne.plugin_wmi_findProxy('') ; continue}
+        id { $SevOne.plugin_wmi_getProxyById($id) ; continue }
+        device { $return =  $SevOne.plugin_wmi_getWmiDevicesById($device.ID) 
+            $return | Add-Member -MemberType NoteProperty -Name Proxy -Value (Get-SevOneWMIProxy -id $return.proxyid).name -PassThru
+          }
         'filter' {
             Write-Debug 'in filter block'
             $SevOne.plugin_wmi_findProxy($filter)
             Write-Debug 'finished finding proxies'
             #filter = ,@('Name',$name),@('ip',$ip)         
           }
+        'default' { $SevOne.plugin_wmi_findProxy('') ; continue}
       }
   }
 }
@@ -1846,7 +1861,7 @@ process {
   }
 }
 
-function Set-SevOnePollingInterval {}
+<#function Set-SevOnePollingInterval {}#>
 
 function Set-SevOneSNMPPlugin {
 [cmdletbinding()]
@@ -1916,12 +1931,22 @@ param
   (
     #
     [parameter(Mandatory,
+    ParameterSetName='ProxyOnly',
+    ValueFromPipelineByPropertyName)]
+    [switch]$ProxyOnly,
+
+    #
+    [parameter(Mandatory,
     ParameterSetName='Default',
     ValueFromPipelineByPropertyName)]
     [bool]$Enabled, 
 
     #
-    [parameter(
+    [parameter(Mandatory,
+    ParameterSetName='ProxyOnly',
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName)]
+    [parameter(Mandatory,
     ParameterSetName='Default',
     ValueFromPipelineByPropertyName)]
     $Device,
@@ -1929,6 +1954,9 @@ param
     #
     [parameter(
     ParameterSetName='Default',
+    ValueFromPipelineByPropertyName)]
+    [parameter(Mandatory,
+    ParameterSetName='ProxyOnly',
     ValueFromPipelineByPropertyName)]
     $Proxy,
 
@@ -1973,35 +2001,45 @@ begin {
     Write-Debug 'finished begin block'
   }
 process {
-    $UserName = $Credential.UserName
-    if ($UserName -like '*\*')
+    switch ($PSCmdlet.ParameterSetName)
       {
-        $UserName = $UserName.Split('\')[-1]
+        'default' {
+            $UserName = $Credential.UserName
+            if ($UserName -like '*\*')
+              {
+                $UserName = $UserName.Split('\')[-1]
+              }
+            switch ($Enabled) { 
+                $true {Set-SevOneWMIProxy -Enabled $true -Device $Device}
+                $false {Set-SevOneWMIProxy -Enabled $true -Device $Device}
+              }
+            if ($Proxy) { 
+                $return = $SevOne.plugin_wmi_setProxy($Device.id,$Proxy.id)
+                $return | __TestReturn__
+              }
+            if ($UseNTLM)
+              {
+              $PSCmdlet.PagingParameters
+              }
+            $return = $SevOne.plugin_wmi_setUseNTLM($Device.id,([int]$UseNTLM).ToString())
+            $return | __TestReturn__
+            $return = $SevOne.plugin_wmi_setWorkgroup($device.id, $Domain)
+            $return | __TestReturn__
+            $return = $SevOne.plugin_wmi_setUsername($Device.id, $UserName)
+            $return | __TestReturn__
+            $return = $SevOne.plugin_wmi_setPassword($Device.id, $Credential.GetNetworkCredential().Password)
+            $return | __TestReturn__
+            $return = $SevOne.plugin_wmi_setAuthenticationLevel($Device.id, $AuthenticationLevel)
+            $return | __TestReturn__
+            $return = $SevOne.plugin_wmi_setImpersonationLevel($Device.id, $ImpersonationLevel)
+            $return | __TestReturn__
+          }
+        'ProxyOnly' {
+            $return = $SevOne.plugin_wmi_setProxy($Device.id,$Proxy.id)
+            $return | __TestReturn__
+          }
       }
-    switch ($Enabled) { 
-        $true {Set-SevOneWMIProxy -Enabled $true -Device $Device}
-        $false {Set-SevOneWMIProxy -Enabled $true -Device $Device}
-      }
-    if ($Proxy) { 
-        $return = $SevOne.plugin_wmi_setProxy($Device.id,$Proxy.id)
-        $return | __TestReturn__
-      }
-    if ($UseNTLM)
-      {
-      $PSCmdlet.PagingParameters
-      }
-    $return = $SevOne.plugin_wmi_setUseNTLM($Device.id,([int]$UseNTLM).ToString())
-    $return | __TestReturn__
-    $return = $SevOne.plugin_wmi_setWorkgroup($device.id, $Domain)
-    $return | __TestReturn__
-    $return = $SevOne.plugin_wmi_setUsername($Device.id, $UserName)
-    $return | __TestReturn__
-    $return = $SevOne.plugin_wmi_setPassword($Device.id, $Credential.GetNetworkCredential().Password)
-    $return | __TestReturn__
-    $return = $SevOne.plugin_wmi_setAuthenticationLevel($Device.id, $AuthenticationLevel)
-    $return | __TestReturn__
-    $return = $SevOne.plugin_wmi_setImpersonationLevel($Device.id, $ImpersonationLevel)
-    $return | __TestReturn__
+    
   }
 }
 
@@ -2327,6 +2365,28 @@ process {
   }
 }
 
+function Balance-SevOneWMIProxy 
+{
+    [cmdletbinding()]
+    param ($device,
+        $WMIProxy
+    )
+    $max = $WMIProxy.count
+    Write-Debug "`$max = $max"
+    Write-Debug "`$Device.count $($device.count)"
+    $i = 0
+    foreach ($d in $device)
+    {
+        Write-Verbose 'in foreach block'
+        Write-Verbose "Device: $($d.name)"
+        Set-SevOneWMIPlugin -Proxy $WMIProxy[$i] -Device $d -ProxyOnly
+        Write-Debug "set proxy on $($d.name)"
+        $i++
+        Write-Verbose "`$i = $i"
+        if ($i -eq $max) {$i = 0}
+        Write-Debug "finished foreach loop for $($d.name)"
+    }    
+}
 
 
 Export-ModuleMember -Function *-* -Variable ''
