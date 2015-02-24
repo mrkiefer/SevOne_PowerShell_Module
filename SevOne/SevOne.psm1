@@ -2019,7 +2019,7 @@ process {
               }
             if ($UseNTLM)
               {
-              $PSCmdlet.PagingParameters
+              $PSCmdlet.PagingParameters # this is wrong, not sure how it got there.
               }
             $return = $SevOne.plugin_wmi_setUseNTLM($Device.id,([int]$UseNTLM).ToString())
             $return | __TestReturn__
