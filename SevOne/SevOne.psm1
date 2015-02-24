@@ -1672,6 +1672,7 @@ param
     [parameter(Mandatory,
     position = 0,
     ParameterSetName='default',
+    ValueFromPipeline,
     ValueFromPipelineByPropertyName)]
     $Device,
 
