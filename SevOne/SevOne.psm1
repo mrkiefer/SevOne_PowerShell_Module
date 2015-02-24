@@ -624,20 +624,28 @@ param (
     [psobject]$Peer,
     [bool]$IsLogged,
     [int]$PageSize,
-    [int]$PageNumber
+    [int]$PageNumber,
+    [timespan]$timeout
   )
 begin {} #Add test connection block
 process {
-    $keys = @()
-    $null = [System.Collections.ArrayList]$keys
-    $null = $keys.Add($SevOne.factory_KeyValue('peerID',$Peer.id))
+    [System.Collections.ArrayList]$keys = @()
+    $null = $keys.Add($SevOne.factory_KeyValue('peerId',$Peer.serverid))
     if ($Starttime ) {$null = $keys.Add($SevOne.factory_KeyValue('startTime',($Starttime | Convertto-UNIXTime))) }
     if ($Endtime ) {$null = $keys.Add($SevOne.factory_KeyValue('endTime',($Endtime | Convertto-UNIXTime))) } 
     if ($OID) {$null =  $keys.Add($SevOne.factory_KeyValue('oid',$OID))}
     if ($IsLogged -ne $null) {$null = $keys.Add($SevOne.factory_KeyValue('isLogged',[int]$IsLogged))}
     if ($PageSize) {$null = $keys.Add($SevOne.factory_KeyValue('pageSize',$PageSize))}
-    if ($PageNumber -ne $null) {$null = $keys.Add($SevOne.factory_KeyValue('pageNumber',$PageNumber))}
+    if ($PageNumber) {$null = $keys.Add($SevOne.factory_KeyValue('pageNumber',$PageNumber))}
+    if ($timeout) {
+        $old = $SevOne.Timeout
+        $SevOne.Timeout = $timeout.Milliseconds
+      }
+    Write-Debug 'Finished Creating $keys'
     $SevOne.trap_get($keys)
+    if ($old) {
+        $SevOne.Timeout = $old
+      }
   }
 }
 
