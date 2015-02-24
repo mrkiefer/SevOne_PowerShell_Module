@@ -613,6 +613,35 @@ process {
   }
 }
 
+
+function Get-SevOneTrap {
+<##>
+param (
+    [string]$OID,
+    [datetime]$Starttime,
+    [datetime]$Endtime,
+    [parameter(Mandatory)]
+    [psobject]$Peer,
+    [bool]$IsLogged,
+    [int]$PageSize,
+    [int]$PageNumber
+  )
+begin {} #Add test connection block
+process {
+    $keys = @()
+    $null = [System.Collections.ArrayList]$keys
+    $null = $keys.Add($SevOne.factory_KeyValue('peerID',$Peer.id))
+    if ($Starttime ) {$null = $keys.Add($SevOne.factory_KeyValue('startTime',($Starttime | Convertto-UNIXTime))) }
+    if ($Endtime ) {$null = $keys.Add($SevOne.factory_KeyValue('endTime',($Endtime | Convertto-UNIXTime))) } 
+    if ($OID) {$null =  $keys.Add($SevOne.factory_KeyValue('oid',$OID))}
+    if ($IsLogged -ne $null) {$null = $keys.Add($SevOne.factory_KeyValue('isLogged',[int]$IsLogged))}
+    if ($PageSize) {$null = $keys.Add($SevOne.factory_KeyValue('pageSize',$PageSize))}
+    if ($PageNumber -ne $null) {$null = $keys.Add($SevOne.factory_KeyValue('pageNumber',$PageNumber))}
+    $SevOne.trap_get($keys)
+  }
+}
+
+
 function Get-SevOneDevice {
 <#
   .SYNOPSIS
