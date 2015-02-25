@@ -615,7 +615,15 @@ process {
 
 
 function Get-SevOneTrap {
-<##>
+<#
+  .SYNOPSIS
+
+  .DESCRIPTION
+
+  .EXAMPLE
+
+  .NOTES
+#>
 param (
     [string]$OID,
     [datetime]$Starttime,
@@ -629,7 +637,7 @@ param (
   )
 begin {} #Add test connection block
 process {
-    [System.Collections.ArrayList]$keys = @()
+    g$keys = @()
     $null = $keys.Add($SevOne.factory_KeyValue('peerId',$Peer.serverid))
     if ($Starttime ) {$null = $keys.Add($SevOne.factory_KeyValue('startTime',($Starttime | Convertto-UNIXTime))) }
     if ($Endtime ) {$null = $keys.Add($SevOne.factory_KeyValue('endTime',($Endtime | Convertto-UNIXTime))) } 
