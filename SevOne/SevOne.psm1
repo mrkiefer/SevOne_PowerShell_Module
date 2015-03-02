@@ -569,7 +569,7 @@ param (
     [parameter(Mandatory,
     Position=1,
     ParameterSetName='device')]
-    [parameter(Mandatory,
+    [parameter(
     Position=1,
     ParameterSetName='Object')]
     [ValidateSet(
@@ -609,16 +609,24 @@ begin {
     if (-not (__TestSevOneConnection__)) {
         throw 'Not connected to a SevOne instance'
       }
+    $i = 0
   }
 process {
+    $i ++
+    Write-Debug "Starting process block: $i"
     switch ($PSCmdlet.ParameterSetName)
       {
         'device' {
+            Write-Verbose 'in device block'
             $method = "plugin_$plugin`_getIndicatorsByDeviceId"
+            Write-Debug '$Method set, ready to draw indicators'
             $return = $SevOne.$method($Device.id)
           }
         'object' {
+            $Plugin = $Object.pluginString
+            Write-Verbose 'in Object Block'
             $method = "plugin_$plugin`_getIndicatorsByObject"
+            Write-Debug '$Method set, ready to draw indicators'
             $return = $SevOne.$method($Object.deviceid,$Object.name)
           }
       }
