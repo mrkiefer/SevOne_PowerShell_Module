@@ -555,20 +555,23 @@ process {
 
 function Get-SevOneIndicator {
 <##>
-[cmdletbinding(DefaultParameterSetName='plugin')]
+[cmdletbinding(DefaultParameterSetName='device')]
 param (
     # The Device that will be associated with Alarms pulled
     [parameter(Mandatory,
     Position=0,
     ValueFromPipelineByPropertyName,
     ValueFromPipeline,
-    ParameterSetName='Plugin')]
+    ParameterSetName='device')]
     [PSObject]$Device,
 
-    #
+    # Set the plugin for pulling the objects
     [parameter(Mandatory,
     Position=1,
-    ParameterSetName='Plugin')]
+    ParameterSetName='device')]
+    [parameter(Mandatory,
+    Position=1,
+    ParameterSetName='Object')]
     [ValidateSet(
       'COC',
       'CALLMANAGER',
@@ -592,7 +595,15 @@ param (
       'WMI',
       'BULKDATA'
     )]
-    [string]$Plugin
+    [string]$Plugin,
+
+    # The Device that will be associated with Alarms pulled
+    [parameter(Mandatory,
+    Position=0,
+    ValueFromPipelineByPropertyName,
+    ValueFromPipeline,
+    ParameterSetName='Object')]
+    [PSObject]$Object
   )
 begin {
     if (-not (__TestSevOneConnection__)) {
@@ -602,9 +613,13 @@ begin {
 process {
     switch ($PSCmdlet.ParameterSetName)
       {
-        'plugin' {
+        'device' {
             $method = "plugin_$plugin`_getIndicatorsByDeviceId"
             $return = $SevOne.$method($Device.id)
+          }
+        'object' {
+            $method = "plugin_$plugin`_getIndicatorsByObject"
+            $return = $SevOne.$method($Object.deviceid,$Object.name)
           }
       }
     $return
