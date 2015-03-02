@@ -2417,10 +2417,10 @@ param (
     $Graph,
     [parameter(Mandatory)]
     [string]$Name,
-    [parameter(Mandatory)]
-    $Timespan,
-    [parameter(Mandatory)]
-    $Trend
+    [parameter()]
+    $Timespan = (New-SevOneTimespan -SimpleTimespan 'past 8 hours'),
+    [parameter()]
+    $Trend = (New-SevOneTrend)
   )
 process {
     $return = $SevOne.report_attachGraphToReport($report.id,$Name,$Graph,$timespan,$trend)
