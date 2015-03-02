@@ -2306,11 +2306,22 @@ param (
     [string]$DataType,
     [validateset('total','rate')]
     [string]$DisplayType,
-    [int]$Percentile # limit values from 0-100, if set set percentEnabled to 1
+    [int]$Percentile, # limit values from 0-100, if set set percentEnabled to 1
+    [validateset('small','medium','large')]
+    [string]$Size
   )
 process {
     $graph = $SevOne.factory_Graph()
     $graph.dataSources = $Source
+    if ($Size) {
+        switch ($Size)
+          {
+            'small' {$val = 1}
+            'medium' {$val = 2}
+            'large' {$val = 3}
+          }
+        $graph.size = $val
+      }
     $graph
   }
 }
