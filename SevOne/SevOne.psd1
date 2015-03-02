@@ -9,7 +9,7 @@
 @{
 
 # Script module or binary module file associated with this manifest.
-RootModule = '.\SevOne\SevOne.psm1'
+RootModule = 'SevOne.psm1'
 
 # Version number of this module.
 ModuleVersion = '1.0.1'
@@ -30,7 +30,7 @@ Copyright = '(c) 2014 Jason Morgan. All rights reserved.'
 Description = 'Module for the SevOne SOAP API'
 
 # Minimum version of the Windows PowerShell engine required by this module
-PowerShellVersion = '3.0'
+PowerShellVersion = '4.0'
 
 # Name of the Windows PowerShell host required by this module
 # PowerShellHostName = ''

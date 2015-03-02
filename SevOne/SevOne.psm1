@@ -568,8 +568,6 @@ param (
     #
     [parameter(Mandatory,
     Position=1,
-    ValueFromPipelineByPropertyName,
-    ValueFromPipeline,
     ParameterSetName='Plugin')]
     [ValidateSet(
       'COC',
@@ -1952,7 +1950,7 @@ begin {
   }
 process {
     Write-Debug ''
-    $return = $SevOne.core_setDeviceSnmpInformation($Device.id,[int]($SNMPCapable),$SNMPPort,$SNMPVersion,$SNMPROCommunity,$SNMPRwCommunity)
+    $return = $SevOne.core_setDeviceSnmpInformation($Device.id,[int]($SNMPCapable),$SNMPPort,$SNMPVersion,$SNMPROCommunity,$SNMPRwCommunity,-1,-1)
     $return | __TestReturn__
   }
 }
