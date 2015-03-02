@@ -613,7 +613,7 @@ begin {
   }
 process {
     $i ++
-    Write-Debug "Starting process block: $i"
+    Write-Verbose "Starting process block: $i"
     switch ($PSCmdlet.ParameterSetName)
       {
         'device' {
