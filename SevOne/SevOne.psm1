@@ -392,6 +392,26 @@ process {
   }
 }
 
+filter __Object__ {
+$obj = [pscustomobject]@{
+      id = $_.id
+      deviceID = $_.deviceId
+      plugin = $_.pluginString
+      name = $_.name
+      system_description = $_.system_description
+      description = $_.description
+      objectType = $_.objectType
+      subtype = $_.subtype
+      enabledStatus = $_.enabledStatus 
+      hiddenStatus = $_.hiddenStatus
+      recordDate = $_.recordDate
+      lastSeen = $_.lastSeen
+      deletedStatus = $_.deletedStatus
+    }
+  $obj.PSObject.TypeNames.Insert(0,'SevOne.Object.Object')
+  $obj
+}
+
 function Get-SevOneObject {
 <##>
 [cmdletbinding(DefaultParameterSetName='device')]
@@ -453,7 +473,7 @@ process {
   }
 } # accept a device throught the pipeline
 
-#Be able to enable deferred data plugin
+
 #Be able to create new object types dynamically
 #Be able to test if a type already exists
 #be able to create new objects based on Typename or Custom name
@@ -658,6 +678,15 @@ process {
           }
       }
   }
+}
+
+function Get-SevOneObjectType {}
+
+filter __ObjectType__ {
+$obj = [pscustomobject]@{
+    }
+  $obj.PSObject.TypeNames.Insert(0,'SevOne.Object.ObjectType')
+  $obj
 }
 
 function New-SevOneObject { 
