@@ -11,7 +11,7 @@ I have two serious concerns at the moment.
 near future.  The current system of type conversion functions is hokey and unsustainable.
 
 2 - The SevOne API's WSDL file may have some issues with .NET.  It looks like some of the factory
-classes return malformed xml.  The module is being tested against 5.3.5 and is currently unable to
+classes return malformed xml.  The module is being tested against 5.3.8a and is currently unable to
 deliver a properly formed SO_Trend object.  
 
 At the point anyone is ready to contribute to this module please contact me @ jason.morgan@verizon.com
