@@ -453,12 +453,78 @@ process {
   }
 } # accept a device throught the pipeline
 
+#Be able to enable deferred data plugin
+#Be able to create new object types dynamically
+#Be able to test if a type already exists
+#be able to create new objects based on Typename or Custom name
+#create new indicator types
+#Test for existing indicator types
+#create new indicator
+#Test for existing indicator
+
+
 function Out-SevOneDeferredData {
 [cmdletbinding()]
 param (
-    $IndicatorID,
+    # Set the object to be added to the SevOne Instance
+    [Parameter(Mandatory,
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName)]
+    $InputObject,
+    # Enter the target SevOne Device
+    [Parameter(Mandatory)]
+    $Device 
+  )
+begin {
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+    #Test is Deferred data enabled - Set if required
+  }
+process {
+    
+    $return = $SevOne.plugin_deferred_insertDataRow($Device.ID,$IndicatorID,$value)
+    $return | __TestReturn__
+  }
+}
+
+function Test-SevOnePlugin {
+param (
+    #
+    [Parameter(Mandatory,
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName)]
     $Device,
-    $value  
+
+    #
+    [parameter(Mandatory,
+    Position=1)]
+    [ValidateSet(
+      'COC',
+      'CALLMANAGER',
+      'CALLMANAGERCDR',
+      'DEFERRED',
+      'DNS',
+      'HTTP',
+      'ICMP',
+      'IPSLA',
+      'JMX',
+      'MYSQLDB',
+      'NBAR',
+      'ORACLEDB',
+      'PORTSHAKER',
+      'PROCESS',
+      'PROXYPING',
+      'SNMP',
+      'CALLD',
+      'VMWARE',
+      'WEBSTATUS',
+      'WMI',
+      'BULKDATA'
+    )]
+    [string]$Plugin,
+
+    [switch]$Quiet
   )
 begin {
     if (-not (__TestSevOneConnection__)) {
@@ -466,8 +532,31 @@ begin {
       }
   }
 process {
-    $return = $SevOne.plugin_deferred_insertDataRow($Device.ID,$IndicatorID,$value)
-    $return | __TestReturn__
+    $return = $SevOne.core_getEnabledPluginsByDeviceId($Device.id)
+    if ($Plugin -in $return) {
+        switch ($Quiet)
+          {
+            $true {$true}
+            $false {
+                [pscustomobject]@{
+                    ComputerName = $Device.Name
+                    Enabled = $true
+                  }
+              }
+          }
+      }
+    else {
+        switch ($Quiet)
+          {
+            $true {$false}
+            $false {
+                [pscustomobject]@{
+                    ComputerName = $Device.Name
+                    Enabled = $false
+                  }
+              }
+          }
+      }
   }
 }
 
