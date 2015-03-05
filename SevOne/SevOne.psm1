@@ -479,13 +479,110 @@ begin {
     if (-not (__TestSevOneConnection__)) {
         throw 'Not connected to a SevOne instance'
       }
-    #Test is Deferred data enabled - Set if required
+    if (! (Test-SevOnePlugin -Device $Device -Plugin DEFERRED))
+      {
+        #Enable DeferredData
+      }
   }
 process {
     
     $return = $SevOne.plugin_deferred_insertDataRow($Device.ID,$IndicatorID,$value)
     $return | __TestReturn__
   }
+}
+
+Function Enable-SevOnePlugin {
+param (
+    # Specify SevOne Device to be modified
+    [Parameter(Mandatory,
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName)]
+    $Device,
+
+    # specify plugin to be enabled
+    [parameter(Mandatory,
+    Position=1)]
+    [ValidateSet(
+      'COC',
+      'CALLMANAGER',
+      'CALLMANAGERCDR',
+      'DEFERRED',
+      'DNS',
+      'HTTP',
+      'ICMP',
+      'IPSLA',
+      'JMX',
+      'MYSQLDB',
+      'NBAR',
+      'ORACLEDB',
+      'PORTSHAKER',
+      'PROCESS',
+      'PROXYPING',
+      'SNMP',
+      'CALLD',
+      'VMWARE',
+      'WEBSTATUS',
+      'WMI',
+      'BULKDATA'
+    )]
+    [string]$Plugin
+  )
+begin {
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+  }
+process {
+    $method = "plugin_$plugin`_enablepluginfordevice"
+    $return = $SevOne.$method($Device.id,1)
+}
+}
+
+Function Disable-SevOnePlugin {
+param (
+    # Specify SevOne Device to be modified
+    [Parameter(Mandatory,
+    ValueFromPipeline,
+    ValueFromPipelineByPropertyName)]
+    $Device,
+
+    # specify plugin to be disabled
+    [parameter(Mandatory,
+    Position=1)]
+    [ValidateSet(
+      'COC',
+      'CALLMANAGER',
+      'CALLMANAGERCDR',
+      'DEFERRED',
+      'DNS',
+      'HTTP',
+      'ICMP',
+      'IPSLA',
+      'JMX',
+      'MYSQLDB',
+      'NBAR',
+      'ORACLEDB',
+      'PORTSHAKER',
+      'PROCESS',
+      'PROXYPING',
+      'SNMP',
+      'CALLD',
+      'VMWARE',
+      'WEBSTATUS',
+      'WMI',
+      'BULKDATA'
+    )]
+    [string]$Plugin
+  )
+begin {
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+  }
+process {
+    $method = "plugin_$plugin`_enablepluginfordevice"
+    $return = $SevOne.$method($Device.id,0)
+}
 }
 
 function Test-SevOnePlugin {
