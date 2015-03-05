@@ -680,10 +680,75 @@ process {
   }
 }
 
-function Get-SevOneObjectType {}
+function Get-SevOneObjectType {
+[cmdletbinding(DefaultParameterSetName='all')]
+param (
+    #Set the Plugin Name
+    [parameter(Mandatory,
+    Position=0,
+    ParameterSetName='OS')]
+    [parameter(Mandatory,
+    Position=0,
+    ParameterSetName='All')]
+    [ValidateSet(
+      'COC',
+      'CALLMANAGER',
+      'CALLMANAGERCDR',
+      'DEFERRED',
+      'DNS',
+      'HTTP',
+      'ICMP',
+      'IPSLA',
+      'JMX',
+      'MYSQLDB',
+      'NBAR',
+      'ORACLEDB',
+      'PORTSHAKER',
+      'PROCESS',
+      'PROXYPING',
+      'SNMP',
+      'CALLD',
+      'VMWARE',
+      'WEBSTATUS',
+      'WMI',
+      'BULKDATA'
+    )]
+    [string]$Plugin,
+
+    # Specify a SevOne OSid must be an integer
+    [parameter(Mandatory,
+    Position=1,
+    ParameterSetName='OS')]
+    [alias('OSid')]
+    [int]$DeviceClass
+  )
+begin {
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+  }
+process {
+    switch ($PSCmdlet.ParameterSetName)
+      {
+        All {
+            $method = "plugin_$Plugin`_getobjecttypes"
+            $return = $SevOne.$method()
+            $return | __ObjectType__
+          }
+        OS {
+            $method = "plugin_$Plugin`_getobjecttypes"
+            $return = $SevOne.$method($DeviceClass)
+            $return | __ObjectType__
+          }
+      }
+  }
+}
 
 filter __ObjectType__ {
 $obj = [pscustomobject]@{
+      id = $_.id
+      osId = $_.osId
+      name = $_.name 
     }
   $obj.PSObject.TypeNames.Insert(0,'SevOne.Object.ObjectType')
   $obj
@@ -1296,7 +1361,7 @@ process {
 end {}
 }
 
-function Remove-SevOneItem {
+function Remove-SevOneItem { # need to support removing Objects and ObjectTypes
 <#
   .SYNOPSIS
     Deletes a SevOne Item
