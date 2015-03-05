@@ -481,7 +481,7 @@ begin {
       }
     if (! (Test-SevOnePlugin -Device $Device -Plugin DEFERRED))
       {
-        #Enable DeferredData
+        Enable-SevOnePlugin -Device $Device -Plugin DEFERRED
       }
   }
 process {
@@ -535,6 +535,7 @@ begin {
 process {
     $method = "plugin_$plugin`_enablepluginfordevice"
     $return = $SevOne.$method($Device.id,1)
+    $return | __TestReturn__
 }
 }
 
@@ -582,6 +583,7 @@ begin {
 process {
     $method = "plugin_$plugin`_enablepluginfordevice"
     $return = $SevOne.$method($Device.id,0)
+    $return | __TestReturn__
 }
 }
 
