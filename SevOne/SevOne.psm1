@@ -490,13 +490,13 @@ process {
 
 function Test-SevOnePlugin {
 param (
-    #
+    # Specify SevOne Device to be tested
     [Parameter(Mandatory,
     ValueFromPipeline,
     ValueFromPipelineByPropertyName)]
     $Device,
 
-    #
+    # specify plugin to be tested
     [parameter(Mandatory,
     Position=1)]
     [ValidateSet(
@@ -524,6 +524,7 @@ param (
     )]
     [string]$Plugin,
 
+    # Set to return only a boolean
     [switch]$Quiet
   )
 begin {
