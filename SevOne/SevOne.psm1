@@ -475,7 +475,7 @@ process {
 
 
 #Be able to create new object types dynamically
-#Be able to test if a type already exists
+
 #be able to create new objects based on Typename or Custom name
 #create new indicator types
 #Test for existing indicator types
@@ -505,7 +505,35 @@ begin {
       }
   }
 process {
-    
+    Write-Verbose "Testing object type"
+    switch ($InputObject.GetType().FullName)
+      {
+        System.Management.Automation.PSCustomObject {
+            $name = $InputObject.psobject.TypeNames[0]
+            if ($name -match 'System.Management.Automation.PSCustomObject') {throw 'Custom objects must have a valid typename to be inserted via the deferred data plugin.'}
+            if ($name -in (Get-SevOneObjectType -Plugin DEFERRED).name) {
+                # Potentially test for matching indicator names
+                # Could print a warning about dropping indicators that don't match the current list
+                # Alternatively could automatically add missing indicators
+              }
+            else {
+                # Create new object Type here
+                #Create Indicators
+              }
+          }
+        default {
+            $name = $InputObject.GetType().FullName
+            if ($name -in (Get-SevOneObjectType -Plugin DEFERRED).name) {
+                # Potentially test for matching indicator names
+                # Could print a warning about dropping indicators that don't match the current list
+                # Alternatively could automatically add missing indicators
+              }
+            else {
+                # Create new object Type here
+                #Create Indicators
+              }
+          }
+      }
     $return = $SevOne.plugin_deferred_insertDataRow($Device.ID,$IndicatorID,$value)
     $return | __TestReturn__
   }
@@ -741,6 +769,57 @@ process {
             $return | __ObjectType__
           }
       }
+  }
+}
+
+function New-SevOneObjectType {
+param (
+    #Set the Plugin Name
+    [parameter(Mandatory,
+    Position=0,
+    ParameterSetName='OS')]
+    [ValidateSet(
+      'COC',
+      'CALLMANAGER',
+      'CALLMANAGERCDR',
+      'DEFERRED',
+      'DNS',
+      'HTTP',
+      'ICMP',
+      'IPSLA',
+      'JMX',
+      'MYSQLDB',
+      'NBAR',
+      'ORACLEDB',
+      'PORTSHAKER',
+      'PROCESS',
+      'PROXYPING',
+      'SNMP',
+      'CALLD',
+      'VMWARE',
+      'WEBSTATUS',
+      'WMI',
+      'BULKDATA'
+    )]
+    [string]$Plugin,
+
+    # Specify a SevOne OSid must be an integer
+    [parameter(
+    Position=2,
+    ParameterSetName='OS')]
+    [alias('OSid')]
+    [int]$DeviceClass = 0,
+
+    #
+    [string]$Name
+  )
+begin {
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+  }
+process {
+  
   }
 }
 
