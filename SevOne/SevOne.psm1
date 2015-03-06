@@ -776,8 +776,7 @@ function New-SevOneObjectType {
 param (
     #Set the Plugin Name
     [parameter(Mandatory,
-    Position=0,
-    ParameterSetName='OS')]
+    Position=0)]
     [ValidateSet(
       'COC',
       'CALLMANAGER',
@@ -805,12 +804,13 @@ param (
 
     # Specify a SevOne OSid must be an integer
     [parameter(
-    Position=2,
-    ParameterSetName='OS')]
+    Position=2)]
     [alias('OSid')]
     [int]$DeviceClass = 0,
 
     #
+    [Parameter(Mandatory,
+    Position = 1)]
     [string]$Name
   )
 begin {
@@ -819,7 +819,9 @@ begin {
       }
   }
 process {
-  
+    $method = "plugin_$Plugin`_createObjectType"
+    $return = $SevOne.$method(0,$Name)
+    if ($return -eq 0) {Write-Error "failed to create object $name"}
   }
 }
 
