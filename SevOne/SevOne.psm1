@@ -474,8 +474,6 @@ process {
 } # accept a device throught the pipeline
 
 
-#Be able to create new object types dynamically
-
 #be able to create new objects based on Typename or Custom name
 #create new indicator types
 #Test for existing indicator types
@@ -484,6 +482,18 @@ process {
 
 
 function Out-SevOneDeferredData {
+<#
+  .SYNOPSIS
+
+  .DESCRIPTION
+    Input objects must have a Typename if a PSObject and all objects must have a Name property.
+
+  .EXAMPLE
+
+  .EXAMPLE
+
+  .NOTES
+#>
 [cmdletbinding()]
 param (
     # Set the object to be added to the SevOne Instance
@@ -506,6 +516,8 @@ begin {
   }
 process {
     Write-Verbose "Testing object type"
+    if (! $InputObject.Name) {throw 'InputObject must have a Name property to be processed by Deferred Data'}
+    $props = ($InputObject | Get-Member -MemberType Property).Name 
     switch ($InputObject.GetType().FullName)
       {
         System.Management.Automation.PSCustomObject {
@@ -517,7 +529,7 @@ process {
                 # Alternatively could automatically add missing indicators
               }
             else {
-                # Create new object Type here
+                New-SevOneObjectType -Plugin DEFERRED -Name $name
                 #Create Indicators
               }
           }
@@ -529,11 +541,12 @@ process {
                 # Alternatively could automatically add missing indicators
               }
             else {
-                # Create new object Type here
+                New-SevOneObjectType -Plugin DEFERRED -Name $name
                 #Create Indicators
               }
           }
       }
+
     $return = $SevOne.plugin_deferred_insertDataRow($Device.ID,$IndicatorID,$value)
     $return | __TestReturn__
   }
