@@ -340,6 +340,46 @@ catch {
     Write-Verbose 'Successfully connected to SevOne Appliance'
 }
 
+#region Users
+function Get-SevOneUser {
+<##>
+param ()
+begin {
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+  }
+process {
+    $SevOne.user_getUsers()
+  }
+}
+
+function Get-SevOneUserRole {}
+
+function New-SevOneUser {}
+
+filter __userRole__ {
+$obj = [pscustomobject]@{
+    id = $_.id
+    name = $_.name 
+  }
+$obj.PSObject.TypeNames.Insert(0,'SevOne.User.userRole')
+$obj
+}
+
+filter __user__ {
+$obj = [pscustomobject]@{
+    id = $_.id
+    userName = $_.username
+    email = $_.email
+  }
+$obj.PSObject.TypeNames.Insert(0,'SevOne.User.user')
+$obj
+}
+
+#endregion Users
+
+
 function Get-SevOnePeer {
 <#
   .SYNOPSIS
