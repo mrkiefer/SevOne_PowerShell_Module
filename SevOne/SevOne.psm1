@@ -1581,7 +1581,7 @@ process {
 end {}
 }
 
-function Remove-SevOneItem { # need to support removing Objects and ObjectTypes
+function Remove-SevOneItem { # need to support removing Objects and ObjectTypes, Users and UserRoles
 <#
   .SYNOPSIS
     Deletes a SevOne Item
