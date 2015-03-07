@@ -350,7 +350,8 @@ begin {
       }
   }
 process {
-    $SevOne.user_getUsers()
+    $return = $SevOne.user_getUsers()
+    $return | __user__
   }
 }
 
@@ -368,7 +369,11 @@ function Get-SevOneUserRole {
 
   .NOTES
 #>
+[cmdletbinding(DefaultParameterSetName='none')]
 param (
+    [Parameter(Mandatory,
+    ParameterSetName='Id')]
+    $Id
   )
 begin {
     if (-not (__TestSevOneConnection__)) {
@@ -376,7 +381,12 @@ begin {
       }
   }
 process {
-    $SevOne.Enduser_getRoles()
+    switch ($PSCmdlet.ParameterSetName)
+      {
+        'none' {$return = $SevOne.user_getRoles()}
+        'id' {$return = $SevOne.user_getRoleById($Id)}
+      }
+    $return | __userRole__
   }
 }
 
