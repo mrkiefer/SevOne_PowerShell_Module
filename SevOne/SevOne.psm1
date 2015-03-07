@@ -439,7 +439,7 @@ process {
     $user.username = $UserCredential.UserName
     $return = $SevOne.user_createUser($user,$Role.id,$UserCredential.GetNetworkCredential().Password)
     if ($Passthrough) {
-        #Not supported at the moment
+        Get-SevOneUser -Id $return
       }
   }
 }
