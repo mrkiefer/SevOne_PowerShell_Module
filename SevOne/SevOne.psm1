@@ -343,14 +343,23 @@ catch {
 #region Users
 function Get-SevOneUser {
 <##>
-param ()
+[cmdletbinding(DefaultParameterSetName='none')]
+param (
+    [parameter(Mandatory,
+    ParameterSetName='id')]
+    [int]$Id
+  )
 begin {
     if (-not (__TestSevOneConnection__)) {
         throw 'Not connected to a SevOne instance'
       }
   }
 process {
-    $return = $SevOne.user_getUsers()
+    switch ($PSCmdlet.ParameterSetName)
+      {
+        'none' {$return = $SevOne.user_getUsers()}
+        'Id' {$return = $SevOne.user_getUserById($Id)}
+      }
     $return | __user__
   }
 }
