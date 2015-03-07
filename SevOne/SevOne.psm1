@@ -390,7 +390,50 @@ process {
   }
 }
 
-function New-SevOneUser {}
+function __userFactory__ {
+$SevOne.factory_User()
+}
+
+function New-SevOneUser {
+<#
+  .SYNOPSIS
+
+  .DESCRIPTION
+
+  .EXAMPLE
+
+  .EXAMPLE
+
+  .EXAMPLE
+
+  .NOTES
+#>
+[cmdletbinding()]
+param (
+    [pscredential]$UserCredential,
+    [string]$EmailAddress,
+    $Role,
+    [string]$FirstName,
+    [string]$LastName,
+    [switch]$Passthrough
+  )
+begin {
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+  }
+process {
+    $user = __userFactory__
+    $user.firstName = $FirstName
+    $user.lastName = $LastName
+    $user.email = $EmailAddress
+    $user.username = $UserCredential.UserName
+    $return = $SevOne.user_createUser($user,$Role.id,$UserCredential.GetNetworkCredential().Password)
+    if ($Passthrough) {
+        #Not supported at the moment
+      }
+  }
+}
 
 filter __userRole__ {
 $obj = [pscustomobject]@{
