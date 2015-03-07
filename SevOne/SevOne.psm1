@@ -354,7 +354,31 @@ process {
   }
 }
 
-function Get-SevOneUserRole {}
+function Get-SevOneUserRole {
+<#
+  .SYNOPSIS
+
+  .DESCRIPTION
+
+  .EXAMPLE
+
+  .EXAMPLE
+
+  .EXAMPLE
+
+  .NOTES
+#>
+param (
+  )
+begin {
+    if (-not (__TestSevOneConnection__)) {
+        throw 'Not connected to a SevOne instance'
+      }
+  }
+process {
+    $SevOne.Enduser_getRoles()
+  }
+}
 
 function New-SevOneUser {}
 
