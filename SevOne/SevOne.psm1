@@ -430,7 +430,7 @@ param (
     [parameter(Mandatory)]
     [string]$LastName,
     [parameter(Mandatory)]
-    [validateset('SevOne','LDAP','TACACS','RADIUS')]
+    [validateset('sevone','LDAP','TACACS','RADIUS')]
     [string]$Authentication,
     [switch]$Passthrough
   )
