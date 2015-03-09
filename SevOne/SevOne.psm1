@@ -419,11 +419,19 @@ function New-SevOneUser {
 #>
 [cmdletbinding()]
 param (
+    [parameter(Mandatory)]
     [pscredential]$UserCredential,
+    [parameter(Mandatory)]
     [string]$EmailAddress,
+    [parameter(Mandatory)]
     $Role,
+    [parameter(Mandatory)]
     [string]$FirstName,
+    [parameter(Mandatory)]
     [string]$LastName,
+    [parameter(Mandatory)]
+    [validateset('SevOne','LDAP','TACACS','RADIUS')]
+    [string]$Authentication,
     [switch]$Passthrough
   )
 begin {
@@ -437,6 +445,8 @@ process {
     $user.lastName = $LastName
     $user.email = $EmailAddress
     $user.username = $UserCredential.UserName
+    $user.Authentication = $Authentication
+    Write-Debug "User loaded for $($UserCredential.UserName), ready to createuser()"
     $return = $SevOne.user_createUser($user,$Role.id,$UserCredential.GetNetworkCredential().Password)
     if ($Passthrough) {
         Get-SevOneUser -Id $return
@@ -1074,6 +1084,7 @@ param (
     ParameterSetName='device')]
     [parameter(
     Position=1,
+    ValueFromPipelineByPropertyName,
     ParameterSetName='Object')]
     [ValidateSet(
       'COC',
