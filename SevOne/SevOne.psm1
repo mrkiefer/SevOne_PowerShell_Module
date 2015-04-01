@@ -560,14 +560,14 @@ param (
     ParameterSetName='Device')]
     [parameter(Mandatory,
     Position=0,
+    ValueFromPipelineByPropertyName,
+    ValueFromPipeline,
     ParameterSetName='Plugin')]
     [PSObject]$Device,
 
     #
     [parameter(
     Position=1,
-    ValueFromPipelineByPropertyName,
-    ValueFromPipeline,
     ParameterSetName='Plugin')]
     [ValidateSet(
       'COC',
