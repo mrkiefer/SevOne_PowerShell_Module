@@ -1238,7 +1238,12 @@ param
     [parameter(Mandatory,
     ParameterSetName='IPAddress',
     ValueFromPipelineByPropertyName)]
-    [IPAddress]$IPAddress
+    [IPAddress]$IPAddress,
+
+    #
+    [parameter(Mandatory,
+    ParameterSetName='Group')]
+    $Group
   )
 begin {
     if (-not (__TestSevOneConnection__)) {
@@ -1248,6 +1253,10 @@ begin {
 process {
     switch ($PSCmdlet.ParameterSetName)
       {
+        'Group' {
+            $return = $SevOne.group_getDevicesByGroupId($Group.id)
+            $return
+          }
         'default' { 
             Write-Debug 'in default block'
             try {$return = $SevOne.core_getDevices()} catch {
