@@ -2426,7 +2426,7 @@ begin {
     Write-Debug 'finished begin block'
   }
 process {
-    switch {
+    switch ($Type) {
         'automatic' {
             $return = $SevOne.core_setDeviceDiscovery($Device.id,'0')
           }
