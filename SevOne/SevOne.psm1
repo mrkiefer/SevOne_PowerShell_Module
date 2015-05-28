@@ -2412,7 +2412,10 @@ param (
     ParameterSetName='Default',
     ValueFromPipeline,
     ValueFromPipelineByPropertyName)]
-    $Device
+    $Device,
+    [parameter(ParameterSetName='default')]
+    [validateset('automatic','manual','all')]
+    [string]$Type
   )
 begin {
     Write-Verbose 'Starting operation'
@@ -2423,7 +2426,19 @@ begin {
     Write-Debug 'finished begin block'
   }
 process {
-    $return = $SevOne.core_setDeviceDiscovery($Device.id,'0')
+    switch {
+        'automatic' {
+            $return = $SevOne.core_setDeviceDiscovery($Device.id,'0')
+          }
+        'manual' {
+            $return = $SevOne.core_setDeviceManualDiscovery($Device.id,'0')
+          }
+        'both' {
+            $return = $SevOne.core_setDeviceDiscovery($Device.id,'0')
+            $return | __TestReturn__
+            $return = $SevOne.core_setDeviceManualDiscovery($Device.id,'0')
+          }
+      }
     $return | __TestReturn__
   }
 }
