@@ -2400,7 +2400,19 @@ begin {
     Write-Debug 'finished begin block'
   }
 process {
-    $return = $SevOne.core_setDeviceDiscovery($Device.id,'1')
+    switch ($Type) {
+        'automatic' {
+            $return = $SevOne.core_setDeviceDiscovery($Device.id,'1')
+          }
+        'manual' {
+            $return = $SevOne.core_setDeviceManualDiscovery($Device.id,'1')
+          }
+        'both' {
+            $return = $SevOne.core_setDeviceDiscovery($Device.id,'1')
+            $return | __TestReturn__
+            $return = $SevOne.core_setDeviceManualDiscovery($Device.id,'1')
+          }
+      }
     $return | __TestReturn__
   }
 }
@@ -2981,7 +2993,7 @@ process {
   }
 }
 
-function Balance-SevOneWMIProxy 
+function Optimize-SevOneWMIProxy 
 {
     [cmdletbinding()]
     param ($device,
@@ -3005,4 +3017,7 @@ function Balance-SevOneWMIProxy
 }
 
 
-Export-ModuleMember -Function *-* -Variable ''
+
+New-Alias -Name Balance-SevOneWMIProxy -Value Optimize-SevOneWMIProxy
+
+Export-ModuleMember -Function *-* -Variable '' -Alias *
