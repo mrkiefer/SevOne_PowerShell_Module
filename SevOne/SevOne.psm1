@@ -3016,7 +3016,16 @@ function Optimize-SevOneWMIProxy
     }    
 }
 
+function Set-SevOneCUCMPoller {
+param (
+    $Device,
+    [bool]$Enabled
+  )
 
+#mtheods
+# plugin_calld_enablePluginForDevice
+# plugin_callmanager_enablePluginForDevice
+}
 
 New-Alias -Name Balance-SevOneWMIProxy -Value Optimize-SevOneWMIProxy
 
