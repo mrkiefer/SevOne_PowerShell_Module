@@ -687,6 +687,12 @@ process {
     $return | __TestReturn__
   }
 }
+function __testproperty__ {}
+function __newproperty__ {}
+function __testobject__ {}
+function __newobject__ {}
+function __loaddata__ {}
+
 
 Function Enable-SevOnePlugin {
 param (
@@ -2386,10 +2392,15 @@ function Enable-SevOneDiscovery {
 param (
     #
     [parameter(Mandatory,
-    ParameterSetName='Default',
+    ParameterSetName='default',
     ValueFromPipeline,
     ValueFromPipelineByPropertyName)]
-    $Device
+    $Device,
+
+    #
+    [parameter()]
+    [validateSet('automatic','manual','both')]
+    $Type
   )
 begin {
     Write-Verbose 'Starting operation'
