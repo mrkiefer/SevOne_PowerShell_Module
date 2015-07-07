@@ -1261,7 +1261,7 @@ process {
       {
         'Group' {
             $return = $SevOne.group_getDevicesByGroupId($Group.id)
-            $return
+            #$return
           }
         'default' { 
             Write-Debug 'in default block'
