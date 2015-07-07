@@ -2400,7 +2400,7 @@ param (
     #
     [parameter()]
     [validateSet('automatic','manual','both')]
-    $Type
+    $Type = 'Automatic'
   )
 begin {
     Write-Verbose 'Starting operation'
