@@ -550,7 +550,7 @@ $obj = [pscustomobject]@{
 
 function Get-SevOneObject {
 <##>
-[cmdletbinding(DefaultParameterSetName='device')]
+[cmdletbinding(DefaultParameterSetName='Device')]
 param (
     # The Device that will be associated with Alarms pulled
     [parameter(Mandatory,
@@ -602,8 +602,14 @@ begin {
 process {
     switch ($PSCmdlet.ParameterSetName)
       {
-        'device' {$return = $SevOne.core_getObjectsByDeviceID($device.id)}
-        'plugin' {$return = $SevOne.core_getObjectsByDeviceIDAndPlugin($device.id,$Plugin)}
+        'Device' {
+            Write-Debug 'in Device block'
+            $return = $SevOne.core_getObjectsByDeviceID($device.id)
+          }
+        'Plugin' {
+            Write-Debug 'in Plugin block'
+            $return = $SevOne.core_getObjectsByDeviceIDAndPlugin($device.id,$Plugin)
+          }
       }
     $return
   }
