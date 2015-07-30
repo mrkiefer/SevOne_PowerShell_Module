@@ -92,6 +92,7 @@ process {
         'SevOne.Class.ObjectClass' {'ObjectClass';continue}
         'SevOne.Group.DeviceGroup' {'DeviceGroup';continue}
         'SevOne.Group.ObjectGroup' {'ObjectGroup';continue}
+        'SevOne.Object.ObjectType' {'Object';continue}
         'SevOne.Peer.PeerObject' {'Peer';continue}
         default {throw 'No type defined'} 
       }
@@ -550,7 +551,7 @@ $obj = [pscustomobject]@{
 
 function Get-SevOneObject {
 <##>
-[cmdletbinding(DefaultParameterSetName='Device')]
+[cmdletbinding(DefaultParameterSetName='device')]
 param (
     # The Device that will be associated with Alarms pulled
     [parameter(Mandatory,
@@ -602,14 +603,8 @@ begin {
 process {
     switch ($PSCmdlet.ParameterSetName)
       {
-        'Device' {
-            Write-Debug 'in Device block'
-            $return = $SevOne.core_getObjectsByDeviceID($device.id)
-          }
-        'Plugin' {
-            Write-Debug 'in Plugin block'
-            $return = $SevOne.core_getObjectsByDeviceIDAndPlugin($device.id,$Plugin)
-          }
+        'device' {$return = $SevOne.core_getObjectsByDeviceID($device.id)}
+        'plugin' {$return = $SevOne.core_getObjectsByDeviceIDAndPlugin($device.id,$Plugin)}
       }
     $return
   }
@@ -1184,14 +1179,14 @@ param (
   )
 begin {} #Add test connection block
 process {
-    g$keys = @()
-    $null = $keys.Add($SevOne.factory_KeyValue('peerId',$Peer.serverid))
-    if ($Starttime ) {$null = $keys.Add($SevOne.factory_KeyValue('startTime',($Starttime | Convertto-UNIXTime))) }
-    if ($Endtime ) {$null = $keys.Add($SevOne.factory_KeyValue('endTime',($Endtime | Convertto-UNIXTime))) } 
-    if ($OID) {$null =  $keys.Add($SevOne.factory_KeyValue('oid',$OID))}
-    if ($IsLogged -ne $null) {$null = $keys.Add($SevOne.factory_KeyValue('isLogged',[int]$IsLogged))}
-    if ($PageSize) {$null = $keys.Add($SevOne.factory_KeyValue('pageSize',$PageSize))}
-    if ($PageNumber) {$null = $keys.Add($SevOne.factory_KeyValue('pageNumber',$PageNumber))}
+    $keys = @()
+    $null = $keys += $SevOne.factory_KeyValue('peerId',$Peer.serverid)
+    if ($Starttime ) {$null = $keys += $SevOne.factory_KeyValue('startTime',($Starttime | Convertto-UNIXTime)) }
+    if ($Endtime ) {$null = $keys += $SevOne.factory_KeyValue('endTime',($Endtime | Convertto-UNIXTime)) } 
+    if ($OID) {$null =  $keys += $SevOne.factory_KeyValue('oid',$OID)}
+    if ($IsLogged -ne $null) {$null = $keys += $SevOne.factory_KeyValue('isLogged',[int]$IsLogged)}
+    if ($PageSize) {$null = $keys += $SevOne.factory_KeyValue('pageSize',$PageSize)}
+    if ($PageNumber) {$null = $keys += $SevOne.factory_KeyValue('pageNumber',$PageNumber)}
     if ($timeout) {
         $old = $SevOne.Timeout
         $SevOne.Timeout = $timeout.Milliseconds
@@ -1690,6 +1685,16 @@ process {
               }
             'device' {
                 $return = $SevOne.core_deleteDevice($Target.id)
+                Write-Debug 'finished generating $return'
+                if ($return -ne 1) {
+                    Write-Debug 'in failure block'
+                    Write-Error "failed to delete $($Target.name)"
+                  }
+                continue
+              }
+            'object' {
+                $Method = "plugin_$($Target.pluginString)_deleteObject"
+                $return = $SevOne.$Method($Target.deviceId,$Target.id)
                 Write-Debug 'finished generating $return'
                 if ($return -ne 1) {
                     Write-Debug 'in failure block'
