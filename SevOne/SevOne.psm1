@@ -606,7 +606,7 @@ process {
         'device' {$return = $SevOne.core_getObjectsByDeviceID($device.id)}
         'plugin' {$return = $SevOne.core_getObjectsByDeviceIDAndPlugin($device.id,$Plugin)}
       }
-    $return
+    $return | __ObjectType__
   }
 } # accept a device throught the pipeline
 
@@ -980,12 +980,36 @@ process {
     if ($return -eq 0) {Write-Error "failed to create object $name"}
   }
 }
-
+@"
+id                 : 53355
+deviceId           : 1182
+pluginString       : SNMP
+name               : vcaamcc22
+system_description : Peripheral Gateway [CTIOS]
+description        : Peripheral Gateway [CTIOS]
+objectType         : 1970
+subtype            : 0
+enabledStatus      : 1
+hiddenStatus       : 0
+recordDate         : 2015-07-28 16:43:25
+lastSeen           : 1438196063
+deletedStatus      : 0
+"@
 filter __ObjectType__ {
 $obj = [pscustomobject]@{
       id = $_.id
-      osId = $_.osId
+      deviceId = $_.deviceId
+      pluginString = $_.pluginString
       name = $_.name 
+      system_description = $_.system_description
+      description = $_.description
+      objectType = $_.objectType
+      subtype = $_.subtype
+      enabledStatus = $_.enabledStatus
+      hiddenStatus = $_.hiddenStatus
+      recordDate = $_.recordDate
+      lastSeen = $_.lastSeen
+      deletedStatus = $_.deletedStatus
     }
   $obj.PSObject.TypeNames.Insert(0,'SevOne.Object.ObjectType')
   $obj
