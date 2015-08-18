@@ -1448,7 +1448,8 @@ begin {
   }
 process{
     try {
-        $return = $SevOne.alert_clearByAlertId($Alert.ID,$Message) 
+        $return = $SevOne.alert_clearByAlertId($Alert.ID,$Message)
+        $return | __TestReturn__
       }
     catch {}
   }
