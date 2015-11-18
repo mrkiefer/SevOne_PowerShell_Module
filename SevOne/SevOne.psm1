@@ -2119,12 +2119,6 @@ function Add-SevOneObjectToGroup {
 param (
     #
     [parameter(Mandatory,
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    [PSObject]$Device,
-    #
-    [parameter(Mandatory,
     ValueFromPipelineByPropertyName,
     ParameterSetName='default')]
     [PSObject]$Group,
@@ -2151,7 +2145,7 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'default' {
-            $return = $SevOne.group_addObjectToGroup($Device.id,$Object.id,$Group.id,$Plugin.id)
+            $return = $SevOne.group_addObjectToGroup($Object.deviceid,$Object.id,$Group.id,$Plugin.id)
           }
       }
     switch ($return)
