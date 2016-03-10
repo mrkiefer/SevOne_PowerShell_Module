@@ -49,8 +49,8 @@ function __TestReturn__ {
     }
 
 function __TestSevOneConnection__ {
-  Write-Verbose 'testing API connection by calling the returnthis() method'
-  Write-Debug 'Begin test'
+  #Write-Verbose 'testing API connection by calling the returnthis() method'
+  #Write-Debug 'Begin test'
   try {[bool]$SevOne.returnthis(1)} catch {$false}
 }
 
@@ -611,13 +611,6 @@ process {
 } # accept a device throught the pipeline
 
 
-#be able to create new objects based on Typename or Custom name
-#create new indicator types
-#Test for existing indicator types
-#create new indicator
-#Test for existing indicator
-
-
 function Out-SevOneDeferredData {
 <#
   .SYNOPSIS
@@ -633,61 +626,102 @@ function Out-SevOneDeferredData {
 #>
 [cmdletbinding()]
 param (
-    # Set the object to be added to the SevOne Instance
-    [Parameter(Mandatory,
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    $InputObject,
-    # Enter the target SevOne Device
-    [Parameter(Mandatory)]
-    $Device 
-  )
+  # Set the object to be added to the SevOne Instance
+  [Parameter(Mandatory,
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName)]
+  $InputObject,
+  # Enter the target SevOne Device
+  [Parameter(Mandatory)]
+  $Device 
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    if (! (Test-SevOnePlugin -Device $Device -Plugin DEFERRED))
-      {
-        Enable-SevOnePlugin -Device $Device -Plugin DEFERRED
-      }
+  Write-Verbose 'testing connection to SevOne Server'
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
-process {
-    Write-Verbose "Testing object type"
-    if (! $InputObject.Name) {throw 'InputObject must have a Name property to be processed by Deferred Data'}
-    $props = ($InputObject | Get-Member -MemberType Property).Name 
-    switch ($InputObject.GetType().FullName)
-      {
-        System.Management.Automation.PSCustomObject {
-            $name = $InputObject.psobject.TypeNames[0]
-            if ($name -match 'System.Management.Automation.PSCustomObject') {throw 'Custom objects must have a valid typename to be inserted via the deferred data plugin.'}
-            if ($name -in (Get-SevOneObjectType -Plugin DEFERRED).name) {
-                # Potentially test for matching indicator names
-                # Could print a warning about dropping indicators that don't match the current list
-                # Alternatively could automatically add missing indicators
-              }
-            else {
-                New-SevOneObjectType -Plugin DEFERRED -Name $name
-                #Create Indicators
-              }
-          }
-        default {
-            $name = $InputObject.GetType().FullName
-            if ($name -in (Get-SevOneObjectType -Plugin DEFERRED).name) {
-                # Potentially test for matching indicator names
-                # Could print a warning about dropping indicators that don't match the current list
-                # Alternatively could automatically add missing indicators
-              }
-            else {
-                New-SevOneObjectType -Plugin DEFERRED -Name $name
-                #Create Indicators
-              }
-          }
-      }
-
-    $return = $SevOne.plugin_deferred_insertDataRow($Device.ID,$IndicatorID,$value)
-    $return | __TestReturn__
+  Write-Verbose 'Testing that the Deferred data plugin is enabled on the device'
+  if (! (Test-SevOnePlugin -Device $Device -Plugin DEFERRED).enabled) {
+    Write-Debug "Enabling deferred data plugin on $($Device.deviceName)"
+    Enable-SevOnePlugin -Device $Device -Plugin DEFERRED
   }
 }
+process {
+  Write-Verbose 'Testing object type'
+  if (! $InputObject.Name) {
+    throw 'InputObject must have a Name property to be processed by Deferred Data'
+  }
+  $props = ($InputObject | Get-Member -MemberType Property | Where-Object {$_.definition -match 'int'}).Name 
+  $objectTypes = Get-SevOneObjectType -Plugin DEFERRED
+  $objects = Get-SevOneObject -Device $Device -Plugin DEFERRED
+  
+  switch ($InputObject.GetType().FullName)
+  {
+    System.Management.Automation.PSCustomObject {
+      $name = $InputObject.psobject.TypeNames[0]
+      if ($name -match 'System.Management.Automation.PSCustomObject') {
+        throw 'Custom objects must have a valid typename to be inserted via the deferred data plugin.'
+      }
+    }
+    default {
+      $name = $InputObject.GetType().FullName
+    }
+  } 
+  if ($name -in $objectTypes.name) { #Existing object Type
+    #store Object Type
+    $type = $objectTypes | Where-Object {$_.name -match $name}
+    # Check for existing object
+    $object = $objects | Where-Object {$_.name -match $InputObject.name}
+    if (! $object) {
+      #Create Object if required
+      New-SevOneObject -Name $InputObject.name -ObjectType $type -Device $Device -Plugin DEFERRED
+      $object = $objects | Where-Object {$_.name -match $InputObject.name}
+      if (! $object) {
+        throw "unable to retrieve object for $($Device.Name)"
+      }  
+    }
+    $Indicators = $SevOne.plugin_deferred_getIndicatorTypesByObjectTypeId($type.id)
+          
+    # Test Indicators
+    foreach ($p in $props) {
+      if (! ($p -in $Indicators.name)) {
+        # Print warning for unmatched indicator
+        Write-Warning "Property $($p) is not on the object type $($type.name). It will be ignored during this run"
+      }
+    }
+  }
+  else {
+    New-SevOneObjectType -Plugin DEFERRED -Name $name
+    $type = Get-SevOneObjectType -Plugin DEFERRED | Where-Object {$_.name -match $name}
+    #Create Indicators
+    foreach ($p in $props) {
+      Write-Verbose "about to create indicator $p on object type $($type.name)"
+      $Null = $SevOne.plugin_deferred_createIndicatorType($type.id,$p)
+      Write-Debug "finished created indicator $p"
+    }
+    $Indicators = $SevOne.plugin_deferred_getIndicatorTypesByObjectTypeId($type.id)
+  }
+  # Create Dictionary
+
+  $hash = @{}
+  foreach ($i in $Indicators)
+  {
+    $value = $InputObject.$($i.name) # wrong vars
+    if (! $value) {$value = 0}
+    $hash.Add($i.id,$value)
+  }
+  $keys = $hash.keys
+  $values = $Keys | ForEach-Object {$hash.$_}
+
+  #Create Key Array $IndicatorID
+
+  # Create matching value Array $value
+  Write-Debug 'About to load data'
+  $return = $SevOne.plugin_deferred_insertDataRow($Device.ID,$keys,$values)
+  $return | __TestReturn__
+}
+}
+
 function __testproperty__ {}
 function __newproperty__ {}
 function __testobject__ {}
@@ -976,25 +1010,10 @@ begin {
   }
 process {
     $method = "plugin_$Plugin`_createObjectType"
-    $return = $SevOne.$method(0,$Name)
+    $return = $SevOne.$method(0,$Name,$null)
     if ($return -eq 0) {Write-Error "failed to create object $name"}
   }
 }
-@"
-id                 : 53355
-deviceId           : 1182
-pluginString       : SNMP
-name               : vcaamcc22
-system_description : Peripheral Gateway [CTIOS]
-description        : Peripheral Gateway [CTIOS]
-objectType         : 1970
-subtype            : 0
-enabledStatus      : 1
-hiddenStatus       : 0
-recordDate         : 2015-07-28 16:43:25
-lastSeen           : 1438196063
-deletedStatus      : 0
-"@
 filter __ObjectType__ {
 $obj = [pscustomobject]@{
       id = $_.id
@@ -1075,26 +1094,28 @@ param (
     [string]$Plugin
   )
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    $method = "plugin_$plugin`_getObjectTypes"
-    $types = $SevOne.$method()
-    if ($ObjectType -notin $types.name)
-      {throw 'no such type exists'}
-    $objectTypeID = $types.where{$_.name -match $ObjectType}.id
-  }
+  if (-not (__TestSevOneConnection__)) {
+      throw 'Not connected to a SevOne instance'
+    }
+  Write-Verbose "creating object $name of type $($ObjectType.name)"
+  Write-Debug 'Ready to create object'
+  $method = "plugin_$plugin`_getObjectTypes"
+  $types = $SevOne.$method()
+  if ($ObjectType.name -notin $types.name)
+    {throw 'no such type exists'}
+  $objectTypeID = $types.where{$_.name -match $ObjectType.name}.id
+}
 process {
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'plugin' {
-          $method = "plugin_$Plugin`_createobject"
-          $return = $SevOne.$method($Device.id,$objectTypeID,$Name)
-          if ($return -eq 0)
-            {Write-Error "failed to create object : $Name"}
-          }
-      }
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'plugin' {
+      $method = "plugin_$Plugin`_createobject"
+      $return = $SevOne.$method($Device.id,$objectTypeID,$Name)
+      if ($return -eq 0)
+        {Write-Error "failed to create object : $Name"}
+    }
   }
+}
 }
 
 function Get-SevOneIndicator {
@@ -1148,7 +1169,14 @@ param (
     ValueFromPipelineByPropertyName,
     ValueFromPipeline,
     ParameterSetName='Object')]
-    [PSObject]$Object
+    [PSObject]$Object,
+
+    [parameter(Mandatory,
+    Position=0,
+    ValueFromPipelineByPropertyName,
+    ValueFromPipeline,
+    ParameterSetName='objectType')]
+    [PSObject]$ObjectType
   )
 begin {
     if (-not (__TestSevOneConnection__)) {
@@ -1162,18 +1190,21 @@ process {
     switch ($PSCmdlet.ParameterSetName)
       {
         'device' {
-            Write-Verbose 'in device block'
-            $method = "plugin_$plugin`_getIndicatorsByDeviceId"
-            Write-Debug '$Method set, ready to draw indicators'
-            $return = $SevOne.$method($Device.id)
-          }
+          Write-Verbose 'in device block'
+          $method = "plugin_$plugin`_getIndicatorsByDeviceId"
+          Write-Debug '$Method set, ready to draw indicators'
+          $return = $SevOne.$method($Device.id)
+        }
         'object' {
-            $Plugin = $Object.pluginString
-            Write-Verbose 'in Object Block'
-            $method = "plugin_$plugin`_getIndicatorsByObject"
-            Write-Debug '$Method set, ready to draw indicators'
-            $return = $SevOne.$method($Object.deviceid,$Object.name)
-          }
+          $Plugin = $Object.pluginString
+          Write-Verbose 'in Object Block'
+          $method = "plugin_$plugin`_getIndicatorsByObject"
+          Write-Debug '$Method set, ready to draw indicators'
+          $return = $SevOne.$method($Object.deviceid,$Object.name)
+        }
+        'objectType' {
+        
+        }
       }
     $return
   }
