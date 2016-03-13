@@ -12,7 +12,7 @@
 RootModule = 'SevOne.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.1'
+ModuleVersion = '1.0.2'
 
 # ID used to uniquely identify this module
 GUID = '21545567-9e35-4ff6-a35c-67d31564cbee'
@@ -21,7 +21,7 @@ GUID = '21545567-9e35-4ff6-a35c-67d31564cbee'
 Author = 'Jason Morgan'
 
 # Company or vendor of this module
-CompanyName = 'Unknown'
+CompanyName = 'Verizon'
 
 # Copyright statement for this module
 Copyright = '(c) 2014 Jason Morgan. All rights reserved.'
@@ -30,7 +30,7 @@ Copyright = '(c) 2014 Jason Morgan. All rights reserved.'
 Description = 'Module for the SevOne SOAP API'
 
 # Minimum version of the Windows PowerShell engine required by this module
-PowerShellVersion = '4.0'
+PowerShellVersion = '5.0'
 
 # Name of the Windows PowerShell host required by this module
 # PowerShellHostName = ''
@@ -54,7 +54,7 @@ PowerShellVersion = '4.0'
 # RequiredAssemblies = @()
 
 # Script files (.ps1) that are run in the caller's environment prior to importing this module.
-# ScriptsToProcess = @()
+ScriptsToProcess = @("$PSScriptRoot\classes\classes.ps1","$PSScriptRoot\Scripts\Alerts.ps1","$PSScriptRoot\Scripts\Devices.ps1")
 
 # Type files (.ps1xml) to be loaded when importing this module
 # TypesToProcess = @()
@@ -63,7 +63,7 @@ PowerShellVersion = '4.0'
 # FormatsToProcess = @()
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
-# NestedModules = @()
+NestedModules = @("unixtime.psm1","tools.psm1")
 
 # Functions to export from this module
 FunctionsToExport = '*'

@@ -1,4 +1,4 @@
-#requires -version 3.0
+
 $SevOne = $null
 
 <#
@@ -29,231 +29,7 @@ At the point anyone is ready to contribute to this module please contact me @ ja
 
 # for object group the device group is required
 
-
-
-function __TestReturn__ {
-    param (
-        #
-        [parameter(Mandatory,
-        ParameterSetName='Default',
-        ValueFromPipeline,
-        ValueFromPipelineByPropertyName)]
-        $return      
-      )
-    switch ($return)
-      {
-        0 { throw 'Failed operation'}
-        1 {Write-Verbose 'Successfully completed set operation'}
-        default {throw "Unexpected return code: $return"}
-      }
-    }
-
-function __TestSevOneConnection__ {
-  #Write-Verbose 'testing API connection by calling the returnthis() method'
-  #Write-Debug 'Begin test'
-  try {[bool]$SevOne.returnthis(1)} catch {$false}
-}
-
-Function __fromUNIXTime__ {
-Param
-  (
-    [Parameter(Mandatory=$true,
-    Position=0,
-    ValueFromPipeline=$true)]
-    [int]$inputobject
-  )
-Process
-  {
-    [datetime]$origin = '1970-01-01 00:00:00'
-    $origin.AddSeconds($inputobject)
-  }
-}
-
-function __SevOneType__ {
-<#
-This is a point of concern, we need to get real object classes in the near future
-#>
-[cmdletbinding()]
-param(
-    [parameter(Mandatory,
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    [ValidateNotNullorEmpty()]
-    [psobject]$InputObject
-  )
-process {
-    Write-Verbose "`$InputObject contains $(($InputObject | measure ).count) items"
-    Write-Debug 'Begin typename test'
-    switch ($InputObject.psobject.TypeNames[0])
-      {
-        'SevOne.Device.DeviceInfo' {'device';continue}
-        'SevOne.Threshold.ThresholdInfo' {'threshold';continue}
-        'SevOne.Class.DeviceClass' {'DeviceClass';continue}
-        'SevOne.Class.ObjectClass' {'ObjectClass';continue}
-        'SevOne.Group.DeviceGroup' {'DeviceGroup';continue}
-        'SevOne.Group.ObjectGroup' {'ObjectGroup';continue}
-        'SevOne.Object.ObjectType' {'Object';continue}
-        'SevOne.Peer.PeerObject' {'Peer';continue}
-        default {throw 'No type defined'} 
-      }
-  }
-}
-
-filter __PluginObject__ {
-    $obj = [pscustomobject]@{
-      Name = $_.name
-      Id = [int]($_.id)
-      Type = $_.objectString
-    }
-  $obj.PSObject.TypeNames.Insert(0,'SevOne.Plugin.PluginClass')
-  $obj
-  }
-
-filter __DeviceObject__ {
-  $base = $_
-  $obj = [pscustomobject]@{
-        ID = [int]($base.id)
-        Name = $base.name
-        AlternateName = $base.alternateName
-        Description = $base.description
-        IPAddress = $base.ip
-        SNMPCapable = [int]($base.snmpCapable) -as [bool]
-        SNMPPort = [int]($base.snmpPort)
-        SNMPVersion = [int]($base.snmpVersion)
-        SNMPROCommunity = $base.snmpRoCommunity
-        snmpRwCommunity = $base.snmpRwCommunity
-        synchronizeInterfaces = $base.synchronizeInterfaces
-        synchronizeObjectsAdminStatus = $base.synchronizeObjectsAdminStatus
-        synchronizeObjectsOperStatus = $base.synchronizeObjectsOperStatus
-        peerID = $base.peer
-        pollFrequency = [int]($base.pollFrequency)
-        elementCount = [int]($base.elementCount)
-        discoverStatus = [int]($base.discoverStatus)
-        discoverPriority = $base.discoverPriority
-        brokenStatus = [int]($base.brokenStatus) -as [bool]
-        isNew = [int]($base.isNew) -as [bool]
-        isDeleted = [int]($base.isDeleted) -as [bool]
-        allowAutomaticDiscovery = [int]($base.allowAutomaticDiscovery) -as [bool]
-        allowManualDiscovery = [int]($base.allowManualDiscovery) -as [bool]
-        osId = $base.osId
-        lastDiscovery = $base.lastDiscovery -as [datetime]
-        snmpStatus = $base.snmpStatus
-        icmpStatus = $base.icmpStatus
-        disableDiscovery = [int]($base.disableDiscovery) -as [bool]
-        disableThresholding = [int]($base.disableThresholding) -as [bool]
-        disablePolling = [int]($base.disablePolling) -as [bool]
-        TimeZone = $Base.timezone
-        RawXML = @{XML = $base}
-      }
-  $obj.PSObject.TypeNames.Insert(0,'SevOne.Device.DeviceInfo')
-  $obj
-}
- 
-filter __ThresholdObject__ {
-  $obj = [pscustomobject]@{
-      id = [int]($_.id  )
-      name = $_.name
-      description = $_.description 
-      deviceId = [int]($_.deviceId)
-      policyId = [int]($_.policyId)
-      severity = $_.severity
-      groupId  = [int]($_.groupId)
-      isDeviceGroup = $_.isDeviceGroup
-      triggerExpression = $_.triggerExpression
-      clearExpression = $_.clearExpression
-      userEnabled = [int]($_.userEnabled) -as [bool]
-      policyEnabled = [int]($_.policyEnabled) -as [bool]
-      timeEnabled = [int]($_.timeEnabled) -as [bool]
-      mailTo = $_.mailTo 
-      mailOnce = $_.mailOnce 
-      mailPeriod = $_.mailPeriod 
-      lastUpdated = $_.lastUpdated -as [datetime] 
-      useDefaultTraps = $_.useDefaultTraps
-      useDeviceTraps = $_.useDeviceTraps
-      useCustomTraps = $_.useCustomTraps
-      triggerMessage = $_.triggerMessage
-      clearMessage = $_.clearMessage
-      appendConditionMessages = $_.appendConditionMessages
-    }
-  $obj.PSObject.TypeNames.Insert(0,'SevOne.Threshold.ThresholdInfo')
-  $obj
-}
-
-filter __AlertObject__ {
-  $obj = [pscustomobject]@{
-      id = [int]($_.id)
-      severity = $_.severity
-      isCleared = [int]($_.isCleared) -as [bool]
-      origin = $_.origin 
-      deviceId = [int]($_.deviceId)
-      pluginName = $_. pluginName
-      objectId = [int]($_.objectId) 
-      pollId = [int]($_.pollId)
-      thresholdId = [int]($_.thresholdId)
-      startTime = $_.Starttime | __fromUNIXTime__
-      endTime = $_.endTime | __fromUNIXTime__
-      message = $_.message 
-      assignedTo = $_.assignedTo
-      comments = $_.comments
-      clearMessage = $_.clearMessage 
-      acknowledgedBy = $_.acknowledgedBy
-      number = $_.number
-      automaticallyProcessed = [int]($_.automaticallyProcessed) -as [bool]
-    }
-  $obj.PSObject.TypeNames.Insert(0,'SevOne.Alert.AlertInfo')
-  $obj
-}
-
-filter __ObjectClass__ {
-  $obj = [pscustomobject]@{
-      Name = $_.name
-      Id = [int]($_.id)
-    }
-  $obj.PSObject.TypeNames.Insert(0,'SevOne.Class.ObjectClass')
-  $obj
-}
-
-filter __DeviceGroupObject__ {
-  $base = $_ 
-  $obj = [pscustomobject]@{
-      ID = [int]($base.id)
-      ParentGroupID = [int]($base.parentid)
-      Name = $base.name
-    }
-  $obj.PSObject.TypeNames.Insert(0,'SevOne.Group.DeviceGroup')
-  $obj
-}
-
-filter __ObjectGroupObject__ {
-  $base = $_ 
-  $obj = [pscustomobject]@{
-      ID = [int]($base.id)
-      ParentGroupID = [int]($base.parentid)
-      Name = $base.name
-    }
-  $obj.PSObject.TypeNames.Insert(0,'SevOne.Group.ObjectGroup')
-  $obj
-}
-
-filter __PeerObject__ {
-  $obj = [pscustomobject]@{
-      serverId = $_.ServerId 
-      name = $_.name 
-      ip = $_.ip
-      is64bit = [int]($_.is64bit) -as [bool]
-      memory = $_.memory
-      isMaster = $_.isMaster 
-      username = $_.username 
-      password = $_.password 
-      capacity = $_.capacity
-      serverLoad = $_.serverLoad
-      flowLoad = $_.flowLoad 
-      model = $_.model
-    }
-  $obj.PSObject.TypeNames.Insert(0,'SevOne.Peer.PeerObject')
-  $obj
-}
-
+#region Connection
 function Connect-SevOne {
 <#
   .SYNOPSIS
@@ -340,6 +116,7 @@ catch {
     if ($ExposeAPI) {$Client}
     Write-Verbose 'Successfully connected to SevOne Appliance'
 }
+#endregion Connection
 
 #region Users
 function Get-SevOneUser {
@@ -361,10 +138,11 @@ process {
         'none' {$return = $SevOne.user_getUsers()}
         'Id' {$return = $SevOne.user_getUserById($Id)}
       }
-    $return | __user__
+    [User]$return
   }
 }
 
+#Still need to add a class for this
 function Get-SevOneUserRole {
 <#
   .SYNOPSIS
@@ -400,9 +178,7 @@ process {
   }
 }
 
-function __userFactory__ {
-$SevOne.factory_User()
-}
+
 
 function New-SevOneUser {
 <#
@@ -453,25 +229,6 @@ process {
         Get-SevOneUser -Id $return
       }
   }
-}
-
-filter __userRole__ {
-$obj = [pscustomobject]@{
-    id = $_.id
-    name = $_.name 
-  }
-$obj.PSObject.TypeNames.Insert(0,'SevOne.User.userRole')
-$obj
-}
-
-filter __user__ {
-$obj = [pscustomobject]@{
-    id = $_.id
-    userName = $_.username
-    email = $_.email
-  }
-$obj.PSObject.TypeNames.Insert(0,'SevOne.User.user')
-$obj
 }
 
 #endregion Users
@@ -525,7 +282,7 @@ process {
             continue
           }
       }
-    $return | __PeerObject__
+    [Peer]$return
   }
 }
 
@@ -614,8 +371,10 @@ process {
 function Out-SevOneDeferredData {
 <#
   .SYNOPSIS
+    Tool to load data into SevOne via the Deferred data api.
 
   .DESCRIPTION
+    This function will take any object you provide and load it into The SevOne PAS Appliance you've previously connected to via the deferred data API. 
     Input objects must have a Typename if a PSObject and all objects must have a Name property.
 
   .EXAMPLE
@@ -675,16 +434,23 @@ process {
     if (! $object) {
       #Create Object if required
       New-SevOneObject -Name $InputObject.name -ObjectType $type -Device $Device -Plugin DEFERRED
-      $object = $objects | Where-Object {$_.name -match $InputObject.name}
+      $device | Start-SevOneDiscovery -Wait
+      ############ Add somethign to start then wait for discovery to complete ##############
+
+      $object = Get-SevOneObject -Device $Device -Plugin DEFERRED | Where-Object {$_.name -match $InputObject.name}
       if (! $object) {
         throw "unable to retrieve object for $($Device.Name)"
       }  
     }
-    $Indicators = $SevOne.plugin_deferred_getIndicatorTypesByObjectTypeId($type.id)
-          
+    $Indicators = @()
+    $Indicators += $SevOne.plugin_deferred_getIndicatorsByObject($device.id,$object.name)
+    if ($indicators.count -eq 0) {
+      Write-Warning 'no indicators present, wait for discovery to complete on new object then try again'
+      continue
+    }     
     # Test Indicators
     foreach ($p in $props) {
-      if (! ($p -in $Indicators.name)) {
+      if (! ($p -in $Indicators.indicatorType)) {
         # Print warning for unmatched indicator
         Write-Warning "Property $($p) is not on the object type $($type.name). It will be ignored during this run"
       }
@@ -699,14 +465,14 @@ process {
       $Null = $SevOne.plugin_deferred_createIndicatorType($type.id,$p)
       Write-Debug "finished created indicator $p"
     }
-    $Indicators = $SevOne.plugin_deferred_getIndicatorTypesByObjectTypeId($type.id)
+    $Indicators = $SevOne.plugin_deferred_getIndicatorsByObject($device.id,$object.name)
   }
   # Create Dictionary
-
+  Write-Debug 'creating dictionary'
   $hash = @{}
   foreach ($i in $Indicators)
   {
-    $value = $InputObject.$($i.name) # wrong vars
+    $value = $InputObject.$($i.indicatorType) # wrong vars
     if (! $value) {$value = 0}
     $hash.Add($i.id,$value)
   }
@@ -1255,237 +1021,11 @@ process {
 }
 
 
-function Get-SevOneDevice {
-<#
-  .SYNOPSIS
-    Gathers SevOne devices
 
-  .DESCRIPTION
-    Gather one or more SevOne devices from the SevOne API
 
-  .EXAMPLE
-    Get-SevOneDevice
 
-    Gathers all SevOne devices
 
-  .EXAMPLE
-    Get-SevOneDevice -Name MyServer
 
-    Returns a device object for the device named MyServer
-
-  .EXAMPLE
-    Get-SevOne -IPAddress 192.168.0.100
-
-    Returns a device object for the device with an IP of 192.168.0.100
-
-  .NOTES
-    At this point there is no support for wildcards.
-#>
-[cmdletbinding(DefaultParameterSetName='default')]
-param
-  (
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Name',
-    ValueFromPipelineByPropertyName)]
-    [string]$Name,
-    
-    #
-    [parameter(Mandatory,
-    ParameterSetName='ID',
-    ValueFromPipelineByPropertyName)]
-    [int]$ID,
-    
-    #
-    [parameter(Mandatory,
-    ParameterSetName='IPAddress',
-    ValueFromPipelineByPropertyName)]
-    [IPAddress]$IPAddress,
-
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Group')]
-    $Group
-  )
-begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-  }
-process {
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'Group' {
-            $return = $SevOne.group_getDevicesByGroupId($Group.id)
-            #$return
-          }
-        'default' { 
-            Write-Debug 'in default block'
-            try {$return = $SevOne.core_getDevices()} catch {
-                $return = $null
-                Write-Error $_.exception.message
-              }
-            continue
-          }
-        'Name' { 
-            Write-Debug 'in name block'
-            try {
-                $return =  $SevOne.core_getDeviceByName($Name)
-                Write-Debug 'Test $return to ensure object is not blank'
-                if (-not $return.id)
-                  {throw "Empty object returned for $Name"}
-              } 
-            catch {
-                $return = $null
-                Write-Error "No device found with name: $Name"
-                Write-Error $_.exception.message
-              }
-            continue
-          }
-        'ID' { 
-            Write-Debug 'in id block'
-            try {$return = $SevOne.core_getDeviceById($ID)} catch {
-                $return = $null
-                Write-Error "No device found with id: $id"
-                Write-Error $_.exception.message
-              }
-            continue
-          }
-        'IPAddress' { 
-            Write-Debug 'in IPAddress block'
-            try {
-                $return = $SevOne.core_getDeviceById(($SevOne.core_getDeviceIdByIp($IPAddress.IPAddressToString)))
-              } 
-            catch {
-                $return = $null
-                Write-Error "No device found with IPAddress: $($IPAddress.IPAddressToString)"
-                Write-Error $_.exception.message
-              }
-            continue
-        }
-      }
-    if ($return)
-      {
-        $return | __DeviceObject__
-      }
-  }
-}
-
-function Get-SevOneAlert {
-<#
-  .SYNOPSIS
-    Gather open alerts in the SevOne environment.
-
-  .DESCRIPTION
-    This function is able to gather alerts generally or on a by device basis.  You can also use -StartTime to filter return data by starttime.  Only open alerts are gathered with this function.
-
-  .EXAMPLE
-    Get-SevOneAlert
-
-    returns all active alerts
-
-  .EXAMPLE
-    Get-SevOneDevice -Name MyServer | Get-SevOneAlert
-
-    returns all active alerts for the device, MyServer
-
-  .NOTES
-    Only gathers open alerts
-    Starttime filters on the client side and not the Server side
-
-#>
-[cmdletbinding(DefaultParameterSetName='default')]
-param
-  (
-    # The Device that will be associated with Alarms pulled
-    [parameter(Mandatory,
-    Position=0,
-    ValueFromPipelineByPropertyName,
-    ValueFromPipeline,
-    ParameterSetName='Device')]
-    [PSObject]$Device,
-
-    # The time to start pulling alerts
-    [parameter(ParameterSetName='Device')]
-    [parameter(ParameterSetName='Default')]    
-    [datetime]$StartTime # not sure I'm happy with the way this parameter is implemented. The filtering occurs on the client side which is pretty wasteful.  Need to explore the API's filtering capabilities.
-  )
-begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-  }
-process 
-  {
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'default' {
-            $return = $SevOne.alert_getAlerts(0)
-          }
-        'device' {
-            $return = $SevOne.alert_getAlertsByDeviceId($Device.id,0)
-          }
-      }
-    foreach ($a in ($return | __AlertObject__))
-      {
-        if ($StartTime)
-          {
-            if ($a.startTime -ge $StartTime)
-              {$a}
-          }
-        else {$a}
-      }
-  }
-end {}
-}
-
-function Close-SevOneAlert {
-<#
-  .SYNOPSIS
-    Closes a SevOne Alert 
-
-  .DESCRIPTION
-    This function will close one or more SevOne Alerts
-
-  .EXAMPLE
-    Get-SevOneAlert | Close-SevOneAlert -message "clearing all alerts"
-
-    Closes all open alerts and appends a message saying, "clearing all alerts"
-
-  .EXAMPLE
-    $Device = Get-SevOneDevice -Name MyServer
-
-    $Alert = Get-SevOneAlert -Device $Device
-
-    Close-SevOneAlert -Alert $Alert
-
-  .NOTES
-    This one is working really well, the default message may change over time.
-#>
-[cmdletbinding()]
-param 
-  (
-    [Parameter(Mandatory,
-    position=0,
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    $Alert,
-    [string]$Message = 'Closed via API'
-  )
-begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-  }
-process{
-    try {
-        $return = $SevOne.alert_clearByAlertId($Alert.ID,$Message)
-        $return | __TestReturn__
-      }
-    catch {}
-  }
-end {}
-}
 
 function Get-SevOnePlugin {
 <#
@@ -2534,7 +2074,10 @@ param (
     ParameterSetName='Default',
     ValueFromPipeline,
     ValueFromPipelineByPropertyName)]
-    $Device
+    $Device,
+
+    [Parameter(ParameterSetName='Default')]
+    [switch]$Wait
   )
 begin {
     Write-Verbose 'Starting operation'
@@ -2544,10 +2087,15 @@ begin {
     Write-Verbose 'Connection verified'
     Write-Debug 'finished begin block'
   }
-process {
-    $return = $SevOne.core_rediscoverDevice($Device.id)
-    $return | __TestReturn__
-  }
+process {  
+  $return = $SevOne.core_rediscoverDevice($Device.id)
+  $return | __TestReturn__
+  if ($wait) {
+    do {$dev = Get-SevOneDevice -ID $Device.id ; Write-warning "Waiting for discovery to finish on $($device.name)"; Start-Sleep -Seconds 10} until (
+      $dev.discoverStatus -eq 0 -and (! $dev.discoverPriority)
+    )
+  } 
+}
 }
 
 <#function Set-SevOnePollingInterval {}#>
@@ -3001,35 +2549,6 @@ $trend.type = 'none'
 $trend
 }
 
-Function Convertto-UNIXTime {
-Param
-  (
-    [Parameter(Mandatory=$true,
-    Position=0,
-    ValueFromPipeline=$true)]
-    [datetime]$DateTime
-  )
-Process
-  {
-    [datetime]$origin = '1970-01-01 00:00:00'
-    ($DateTime - $origin).totalseconds 
-  }
-}
-
-Function ConvertFrom-UNIXTime {
-Param
-  (
-    [Parameter(Mandatory=$true,
-    Position=0,
-    ValueFromPipeline=$true)]
-    [int]$inputobject
-  )
-Process
-  {
-    [datetime]$origin = '1970-01-01 00:00:00'
-    $origin.AddSeconds($inputobject)
-  }
-}
 
 function Add-SevOneGraphtoReport {
 param (
@@ -3100,5 +2619,3 @@ param (
 }
 
 New-Alias -Name Balance-SevOneWMIProxy -Value Optimize-SevOneWMIProxy
-
-Export-ModuleMember -Function *-* -Variable '' -Alias *
