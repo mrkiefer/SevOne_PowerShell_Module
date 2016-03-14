@@ -300,18 +300,18 @@ class Peer : SevOne {
   #Constructors
   Peer () {}
   Peer ($raw) {
-    serverId = $_.ServerId 
-    name = $_.name 
-    ip = $_.ip
-    is64bit = [int]($_.is64bit) -as [bool]
-    memory = $_.memory
-    isMaster = $_.isMaster 
-    username = $_.username 
-    password = $_.password 
-    capacity = $_.capacity
-    serverLoad = $_.serverLoad
-    flowLoad = $_.flowLoad 
-    model = $_.model
+    $this.serverId = $_.serverId 
+    $this.name = $_.name 
+    $this.ip = $_.ip
+    $this.is64bit = [int]($_.is64bit) -as [bool]
+    $this.memory = $_.memory
+    $this.isMaster = $_.isMaster 
+    $this.username = $_.username 
+    $this.password = $_.password 
+    $this.capacity = $_.capacity
+    $this.serverLoad = $_.serverLoad
+    $this.flowLoad = $_.flowLoad 
+    $this.model = $_.model
   }
 
 }
