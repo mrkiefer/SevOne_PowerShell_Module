@@ -414,6 +414,7 @@ begin {
   }
 process {
     Write-Debug 'opened process block'
+    $return = @()
     switch ($PSCmdlet.ParameterSetName)
       {
         'Default' {
@@ -430,7 +431,7 @@ process {
           }
       }
     Write-Debug 'Sending $return to object creation'
-    $return | __ObjectGroupObject__
+    $return.foreach{[objectGroup]$_}
   }
 end {}
 }
