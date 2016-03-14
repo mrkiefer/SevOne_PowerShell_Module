@@ -585,7 +585,31 @@ end {}
 
 #region Objects
 function Get-SevOneObject {
-<##>
+<#
+  .SYNOPSIS
+    Gets a SevOne Object Object <- not a typo
+
+  .DESCRIPTION
+    Use this function to get one or more SevOne objects for a given device.  You have the option to constrain this by plugin.
+
+  .EXAMPLE
+    Get-SevOneDevice | Get-SevOneObject
+
+    ------------------------------------------
+
+    Gets all objects for all devices
+
+  .EXAMPLE
+    Get-SevOneDevice | Get-SevOneObject -Plugin DEFERRED 
+
+    -----------------------------------------------------
+
+    Gets all the deferred data objects for all devices
+
+  .NOTES
+    You seen Deadpool yet?  It's pretty good.
+    
+#>
 [cmdletbinding(DefaultParameterSetName='device')]
 param (
   # The Device that will be associated with Alarms pulled
@@ -795,56 +819,69 @@ process {
 }
 
 function New-SevOneObjectType {
+<#
+  .SYNOPSIS
+    Creates a new SevOne object type
+
+  .DESCRIPTION
+    Use this function to create a new object type by plugin.  The Objecttype is blank until you add indicatorTypes to it.
+
+  .EXAMPLE
+    New-SevOneObjectType -Plugin DEFERRED -Name CustomType1
+
+  .NOTES
+
+#>
 param (
-    #Set the Plugin Name
-    [parameter(Mandatory,
-    Position=0)]
-    [ValidateSet(
-      'COC',
-      'CALLMANAGER',
-      'CALLMANAGERCDR',
-      'DEFERRED',
-      'DNS',
-      'HTTP',
-      'ICMP',
-      'IPSLA',
-      'JMX',
-      'MYSQLDB',
-      'NBAR',
-      'ORACLEDB',
-      'PORTSHAKER',
-      'PROCESS',
-      'PROXYPING',
-      'SNMP',
-      'CALLD',
-      'VMWARE',
-      'WEBSTATUS',
-      'WMI',
-      'BULKDATA'
-    )]
-    [string]$Plugin,
+  #Set the Plugin Name
+  [parameter(Mandatory,
+  Position=0)]
+  [ValidateSet(
+    'COC',
+    'CALLMANAGER',
+    'CALLMANAGERCDR',
+    'DEFERRED',
+    'DNS',
+    'HTTP',
+    'ICMP',
+    'IPSLA',
+    'JMX',
+    'MYSQLDB',
+    'NBAR',
+    'ORACLEDB',
+    'PORTSHAKER',
+    'PROCESS',
+    'PROXYPING',
+    'SNMP',
+    'CALLD',
+    'VMWARE',
+    'WEBSTATUS',
+    'WMI',
+    'BULKDATA'
+  )]
+  [string]$Plugin,
 
-    # Specify a SevOne OSid must be an integer
-    [parameter(
-    Position=2)]
-    [alias('OSid')]
-    [int]$DeviceClass = 0,
+  # Specify a SevOne OSid must be an integer
+  [parameter(
+  Position=2)]
+  [alias('OSid')]
+  [int]$DeviceClass = 0,
 
-    #
-    [Parameter(Mandatory,
-    Position = 1)]
-    [string]$Name
-  )
+  #
+  [Parameter(Mandatory,
+  Position = 1)]
+  [string]$Name
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-  }
+  if (-not (__TestSevOneConnection__)) {
+      throw 'Not connected to a SevOne instance'
+    }
+}
 process {
-    $method = "plugin_$Plugin`_createObjectType"
-    $return = $SevOne.$method(0,$Name,$null)
-    if ($return -eq 0) {Write-Error "failed to create object $name"}
-  }
+  $method = "plugin_$Plugin`_createObjectType"
+  $return = $SevOne.$method(0,$Name,$null)
+  if ($return -eq 0) {Write-Error "failed to create object $name"}
+}
 }
 
 #endregion Objects
