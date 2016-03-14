@@ -2702,6 +2702,7 @@ begin {
 }
 process {
   Write-Verbose 'Testing object type'
+  Write-Verbose "Loading data for object $($InputObject.name)"
   if (! $InputObject.Name) {
     throw 'InputObject must have a Name property to be processed by Deferred Data'
   }
