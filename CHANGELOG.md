@@ -8,4 +8,4 @@ Also in the midst of refactoring the entire module.
 
 # 1.0.3
 
-Get-SevOneObject and Get-SevOneDevice now leverage Powershell classes
+Most core functions are now leveraging powershell classes
