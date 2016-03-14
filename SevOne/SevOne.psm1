@@ -985,448 +985,530 @@ process {
 #region Plugins
 
 Function Enable-SevOnePlugin {
-param (
-    # Specify SevOne Device to be modified
-    [Parameter(Mandatory,
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    $Device,
+<#
+  .SYNOPSIS
+    Enables a SevOne Plugin for a device
 
-    # specify plugin to be enabled
-    [parameter(Mandatory,
-    Position=1)]
-    [ValidateSet(
-      'COC',
-      'CALLMANAGER',
-      'CALLMANAGERCDR',
-      'DEFERRED',
-      'DNS',
-      'HTTP',
-      'ICMP',
-      'IPSLA',
-      'JMX',
-      'MYSQLDB',
-      'NBAR',
-      'ORACLEDB',
-      'PORTSHAKER',
-      'PROCESS',
-      'PROXYPING',
-      'SNMP',
-      'CALLD',
-      'VMWARE',
-      'WEBSTATUS',
-      'WMI',
-      'BULKDATA'
-    )]
-    [string]$Plugin
-  )
+  .DESCRIPTION
+    Use this function to enable a plugin on a device
+
+  .EXAMPLE 
+    Get-SevOneDevice -id 5 | enable-SevOnePlugin -Plugin DEFERRED
+
+  .NOTES
+
+#>
+param (
+  # Specify SevOne Device to be modified
+  [Parameter(Mandatory,
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName)]
+  [device]$Device,
+
+  # specify plugin to be enabled
+  [parameter(Mandatory,
+  Position=1)]
+  [ValidateSet(
+    'COC',
+    'CALLMANAGER',
+    'CALLMANAGERCDR',
+    'DEFERRED',
+    'DNS',
+    'HTTP',
+    'ICMP',
+    'IPSLA',
+    'JMX',
+    'MYSQLDB',
+    'NBAR',
+    'ORACLEDB',
+    'PORTSHAKER',
+    'PROCESS',
+    'PROXYPING',
+    'SNMP',
+    'CALLD',
+    'VMWARE',
+    'WEBSTATUS',
+    'WMI',
+    'BULKDATA'
+  )]
+  [string]$Plugin
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+}
 process {
-    $method = "plugin_$plugin`_enablepluginfordevice"
-    $return = $SevOne.$method($Device.id,1)
-    $return | __TestReturn__
+  $method = "plugin_$plugin`_enablepluginfordevice"
+  $return = $SevOne.$method($Device.id,1)
+  $return | __TestReturn__
 }
 }
 
 Function Disable-SevOnePlugin {
-param (
-    # Specify SevOne Device to be modified
-    [Parameter(Mandatory,
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    $Device,
+<#
+  .SYNOPSIS
+    Disables a SevOne Plugin for a device
 
-    # specify plugin to be disabled
-    [parameter(Mandatory,
-    Position=1)]
-    [ValidateSet(
-      'COC',
-      'CALLMANAGER',
-      'CALLMANAGERCDR',
-      'DEFERRED',
-      'DNS',
-      'HTTP',
-      'ICMP',
-      'IPSLA',
-      'JMX',
-      'MYSQLDB',
-      'NBAR',
-      'ORACLEDB',
-      'PORTSHAKER',
-      'PROCESS',
-      'PROXYPING',
-      'SNMP',
-      'CALLD',
-      'VMWARE',
-      'WEBSTATUS',
-      'WMI',
-      'BULKDATA'
-    )]
-    [string]$Plugin
-  )
+  .DESCRIPTION
+    Use this function to disable a plugin on a device
+
+  .EXAMPLE 
+    Get-SevOneDevice -id 5 | disable-SevOnePlugin -Plugin DEFERRED
+
+  .NOTES
+
+#>
+param (
+  # Specify SevOne Device to be modified
+  [Parameter(Mandatory,
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName)]
+  [device]$Device,
+
+  # specify plugin to be disabled
+  [parameter(Mandatory,
+  Position=1)]
+  [ValidateSet(
+    'COC',
+    'CALLMANAGER',
+    'CALLMANAGERCDR',
+    'DEFERRED',
+    'DNS',
+    'HTTP',
+    'ICMP',
+    'IPSLA',
+    'JMX',
+    'MYSQLDB',
+    'NBAR',
+    'ORACLEDB',
+    'PORTSHAKER',
+    'PROCESS',
+    'PROXYPING',
+    'SNMP',
+    'CALLD',
+    'VMWARE',
+    'WEBSTATUS',
+    'WMI',
+    'BULKDATA'
+  )]
+  [string]$Plugin
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+}
 process {
-    $method = "plugin_$plugin`_enablepluginfordevice"
-    $return = $SevOne.$method($Device.id,0)
-    $return | __TestReturn__
+  $method = "plugin_$plugin`_enablepluginfordevice"
+  $return = $SevOne.$method($Device.id,0)
+  $return | __TestReturn__
 }
 }
 
 function Test-SevOnePlugin {
+<#
+  .SYNOPSIS
+    Tests if a plugin is enabled on a device
+
+  .DESCRIPTION
+    Checks to see if a plugin is enabled on a given device.  Set the quiet switch to return a simple boolean value.
+
+  .EXAMPLES
+    Test-SevOnePlugin -Device (get-sevonedevice -id 5) -Plugin Deferred -Quiet
+
+  .NOTES
+
+#>
 param (
-    # Specify SevOne Device to be tested
-    [Parameter(Mandatory,
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    $Device,
+  # Specify SevOne Device to be tested
+  [Parameter(Mandatory,
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName)]
+  [device]$Device,
 
-    # specify plugin to be tested
-    [parameter(Mandatory,
-    Position=1)]
-    [ValidateSet(
-      'COC',
-      'CALLMANAGER',
-      'CALLMANAGERCDR',
-      'DEFERRED',
-      'DNS',
-      'HTTP',
-      'ICMP',
-      'IPSLA',
-      'JMX',
-      'MYSQLDB',
-      'NBAR',
-      'ORACLEDB',
-      'PORTSHAKER',
-      'PROCESS',
-      'PROXYPING',
-      'SNMP',
-      'CALLD',
-      'VMWARE',
-      'WEBSTATUS',
-      'WMI',
-      'BULKDATA'
-    )]
-    [string]$Plugin,
+  # specify plugin to be tested
+  [parameter(Mandatory,
+  Position=1)]
+  [ValidateSet(
+    'COC',
+    'CALLMANAGER',
+    'CALLMANAGERCDR',
+    'DEFERRED',
+    'DNS',
+    'HTTP',
+    'ICMP',
+    'IPSLA',
+    'JMX',
+    'MYSQLDB',
+    'NBAR',
+    'ORACLEDB',
+    'PORTSHAKER',
+    'PROCESS',
+    'PROXYPING',
+    'SNMP',
+    'CALLD',
+    'VMWARE',
+    'WEBSTATUS',
+    'WMI',
+    'BULKDATA'
+  )]
+  [string]$Plugin,
 
-    # Set to return only a boolean
-    [switch]$Quiet
-  )
+  # Set to return only a boolean
+  [switch]$Quiet
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+}
 process {
-    $return = $SevOne.core_getEnabledPluginsByDeviceId($Device.id)
-    if ($Plugin -in $return) {
-        switch ($Quiet)
-          {
-            $true {$true}
-            $false {
-                [pscustomobject]@{
-                    ComputerName = $Device.Name
-                    Enabled = $true
-                  }
-              }
+  $return = $SevOne.core_getEnabledPluginsByDeviceId($Device.id)
+  if ($Plugin -in $return) {
+    switch ($Quiet)
+    {
+      $true {$true}
+      $false {
+        [pscustomobject]@{
+            ComputerName = $Device.Name
+            Enabled = $true
           }
       }
-    else {
-        switch ($Quiet)
-          {
-            $true {$false}
-            $false {
-                [pscustomobject]@{
-                    ComputerName = $Device.Name
-                    Enabled = $false
-                  }
-              }
-          }
-      }
+    }
   }
+  else {
+    switch ($Quiet)
+    {
+      $true {$false}
+      $false {
+        [pscustomobject]@{
+            ComputerName = $Device.Name
+            Enabled = $false
+          }
+      }
+    }
+  }
+}
 }
 
 function Get-SevOnePlugin {
 <#
   .SYNOPSIS
     Gather SevOne plugins
+
   .DESCRIPTION
     This function will gather all SevOne plugin objects
+
   .NOTES
 #>
 [cmdletBinding(DefaultParameterSetName='default')]
 param (
-    [parameter(
-    Mandatory,
-    ParameterSetName='Name')]
-    $Name
-  )
+  [parameter(
+  Mandatory,
+  ParameterSetName='Name')]
+  $Name
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    $return = @()
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'default' {
-          $return = $SevOne.core_getPlugins()
-        }
-        'name' {
-          $return = $SevOne.core_getPlugins().where{$_.name -match $name}
-          if ($return.count -eq 0) {
-            Write-Warning "No plugin found for $name"
-          }
-        }
+  $return = @()
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'default' {
+      $return = $SevOne.core_getPlugins()
+    }
+    'name' {
+      $return = $SevOne.core_getPlugins().where{$_.name -match $name}
+      if ($return.count -eq 0) {
+        Write-Warning "No plugin found for $name"
       }
-    $return.foreach{[Plugin]$_}
+    }
   }
+  $return.foreach{[Plugin]$_}
+}
 end {}
-  }
+}
 
 function Set-SevOneSNMPPlugin {
+<#
+  .SYNOPSIS
+    Sets the SNMP Plugin attributes on a device
+
+  .DESCRIPTION
+    Use this plugin to set the values for the SNMP plugin on a given device
+
+  .EXAMPLE
+    Get-SevOneDevice | Set-SevOneSNMPPlugin -SNMPCapable $true
+
+  .NOTES
+
+#>
 [cmdletbinding()]
 param (
-    [Parameter(Mandatory,
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    $Device,
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    [Bool]$SNMPCapable = $true,
+  [Parameter(Mandatory,
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [device]$Device,
 
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    [int]$SNMPVersion = 2,
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [Bool]$SNMPCapable = $true,
 
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    [string]$SNMPROCommunity = '',
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [int]$SNMPVersion = 2,
 
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    [string]$SNMPRwCommunity = '',
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [string]$SNMPROCommunity = '',
 
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    [int]$SNMPPort = 161
-  )
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [string]$SNMPRwCommunity = '',
+
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [int]$SNMPPort = 161
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    Write-Debug ''
-    $return = $SevOne.core_setDeviceSnmpInformation($Device.id,[int]($SNMPCapable),$SNMPPort,$SNMPVersion,$SNMPROCommunity,$SNMPRwCommunity,-1,-1)
-    $return | __TestReturn__
-  }
+  Write-Debug ''
+  $return = $SevOne.core_setDeviceSnmpInformation($Device.id,[int]($SNMPCapable),$SNMPPort,$SNMPVersion,$SNMPROCommunity,$SNMPRwCommunity,-1,-1)
+  $return | __TestReturn__
+}
 }
 
 function Set-SevOneWMIPlugin {
 <#
   .SYNOPSIS
+    Sets the WMI Plugin attributes on a device
 
   .DESCRIPTION
+    Use this plugin to set the values for the WMI plugin on a given device
 
   .EXAMPLE
-    
-  .EXAMPLE
-    
-  .EXAMPLE
+    Get-SevOneDevice | Set-SevOneWMIPlugin -Enabled $true
     
   .NOTES
     
 #>
 [cmdletbinding(DefaultParameterSetName='default')]
-param
-  (
-    #
-    [parameter(Mandatory,
-    ParameterSetName='ProxyOnly',
-    ValueFromPipelineByPropertyName)]
-    [switch]$ProxyOnly,
+param (
+  #
+  [parameter(Mandatory,
+  ParameterSetName='ProxyOnly',
+  ValueFromPipelineByPropertyName)]
+  [switch]$ProxyOnly,
 
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    [bool]$Enabled, 
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  [bool]$Enabled, 
 
-    #
-    [parameter(Mandatory,
-    ParameterSetName='ProxyOnly',
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    $Device,
+  #
+  [parameter(Mandatory,
+  ParameterSetName='ProxyOnly',
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName)]
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  [device]$Device,
 
-    #
-    [parameter(
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    [parameter(Mandatory,
-    ParameterSetName='ProxyOnly',
-    ValueFromPipelineByPropertyName)]
-    $Proxy,
+  #
+  [parameter(
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  [parameter(Mandatory,
+  ParameterSetName='ProxyOnly',
+  ValueFromPipelineByPropertyName)]
+  $Proxy,
 
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    [bool]$UseNTLM,
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  [bool]$UseNTLM,
 
-    # Be sure to omit domain info
-    [parameter(
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    [pscredential]$Credential,
+  # Be sure to omit domain info
+  [parameter(
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  [pscredential]$Credential,
 
-    #
-    [parameter(
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    [string]$Domain,
+  #
+  [parameter(
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  [string]$Domain,
 
-    #
-    [parameter(
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    [validateSet('Default','None','Connect','Call','Packet','PacketIntegrity','PacketPrivacy','Unchanged')]
-    [string]$AuthenticationLevel = 'default',
+  #
+  [parameter(
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  [validateSet('Default','None','Connect','Call','Packet','PacketIntegrity','PacketPrivacy','Unchanged')]
+  [string]$AuthenticationLevel = 'default',
 
-    #
-    [parameter(
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    [validateSet('Default','Anonymous','Delegate','Identify','Impersonate')]
-    [string]$ImpersonationLevel = 'default'
-  )
+  #
+  [parameter(
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  [validateSet('Default','Anonymous','Delegate','Identify','Impersonate')]
+  [string]$ImpersonationLevel = 'default'
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'default' {
-            $UserName = $Credential.UserName
-            if ($UserName -like '*\*')
-              {
-                $UserName = $UserName.Split('\')[-1]
-              }
-            switch ($Enabled) { 
-                $true {Set-SevOneWMIProxy -Enabled $true -Device $Device}
-                $false {Set-SevOneWMIProxy -Enabled $true -Device $Device}
-              }
-            if ($Proxy) { 
-                $return = $SevOne.plugin_wmi_setProxy($Device.id,$Proxy.id)
-                $return | __TestReturn__
-              }
-            if ($UseNTLM)
-              {
-              $PSCmdlet.PagingParameters # this is wrong, not sure how it got there.
-              }
-            $return = $SevOne.plugin_wmi_setUseNTLM($Device.id,([int]$UseNTLM).ToString())
-            $return | __TestReturn__
-            $return = $SevOne.plugin_wmi_setWorkgroup($device.id, $Domain)
-            $return | __TestReturn__
-            $return = $SevOne.plugin_wmi_setUsername($Device.id, $UserName)
-            $return | __TestReturn__
-            $return = $SevOne.plugin_wmi_setPassword($Device.id, $Credential.GetNetworkCredential().Password)
-            $return | __TestReturn__
-            $return = $SevOne.plugin_wmi_setAuthenticationLevel($Device.id, $AuthenticationLevel)
-            $return | __TestReturn__
-            $return = $SevOne.plugin_wmi_setImpersonationLevel($Device.id, $ImpersonationLevel)
-            $return | __TestReturn__
-          }
-        'ProxyOnly' {
-            $return = $SevOne.plugin_wmi_setProxy($Device.id,$Proxy.id)
-            $return | __TestReturn__
-          }
-      }
-    
-  }
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'default' {
+      $UserName = $Credential.UserName
+      if ($UserName -like '*\*')
+        {
+          $UserName = $UserName.Split('\')[-1]
+        }
+      switch ($Enabled) { 
+          $true {Set-SevOneWMIProxy -Enabled $true -Device $Device}
+          $false {Set-SevOneWMIProxy -Enabled $true -Device $Device}
+        }
+      if ($Proxy) { 
+          $return = $SevOne.plugin_wmi_setProxy($Device.id,$Proxy.id)
+          $return | __TestReturn__
+        }
+      if ($UseNTLM)
+        {
+        $PSCmdlet.PagingParameters # this is wrong, not sure how it got there.
+        }
+      $return = $SevOne.plugin_wmi_setUseNTLM($Device.id,([int]$UseNTLM).ToString())
+      $return | __TestReturn__
+      $return = $SevOne.plugin_wmi_setWorkgroup($device.id, $Domain)
+      $return | __TestReturn__
+      $return = $SevOne.plugin_wmi_setUsername($Device.id, $UserName)
+      $return | __TestReturn__
+      $return = $SevOne.plugin_wmi_setPassword($Device.id, $Credential.GetNetworkCredential().Password)
+      $return | __TestReturn__
+      $return = $SevOne.plugin_wmi_setAuthenticationLevel($Device.id, $AuthenticationLevel)
+      $return | __TestReturn__
+      $return = $SevOne.plugin_wmi_setImpersonationLevel($Device.id, $ImpersonationLevel)
+      $return | __TestReturn__
+    }
+    'ProxyOnly' {
+      $return = $SevOne.plugin_wmi_setProxy($Device.id,$Proxy.id)
+      $return | __TestReturn__
+    }
+  }   
+}
 }
 
 function Set-SevOneICMPPlugin {
-param (
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    [bool]$Enabled, 
+<#
+  .SYNOPSIS
+    Sets the ICMP Plugin attributes on a device
 
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    $Device
-  )
+  .DESCRIPTION
+    Use this plugin to set the values for the ICMP plugin on a given device
+
+  .EXAMPLE
+    Get-SevOneDevice | Set-SevOneICMPPlugin -Enabled $true
+    
+  .NOTES
+    
+#>
+param (
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  [bool]$Enabled, 
+
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName)]
+  [device]$Device
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    $return = $Sevone.plugin_ICMP_enablepluginfordevice($Device.id,[int]$Enabled)
-    $return | __TestReturn__
-  }
+  $return = $Sevone.plugin_ICMP_enablepluginfordevice($Device.id,[int]$Enabled)
+  $return | __TestReturn__
+}
 }
 
 function Get-SevOneEnabledPlugin {
+<#
+  .SYNOPSIS
+    Get the plugins that are enabled on a particular device
+
+  .DESCRIPTION
+    Use this plugin to get all the plugins that are enabled on a device
+
+  .EXAMPLE
+    Get-SevOneDevice | Get-SevOneEnabledPlugin
+
+    ----------------------------------------------
+
+    Gets all the enabled plugins in your environment
+    
+  .NOTES
+    
+#>
 param (
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    $Device
-  )
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName)]
+  [device]$Device
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    $return = $SevOne.core_getEnabledPluginsByDeviceId($device.id)
-    $return | foreach {
-        Get-SevOnePlugin -Name $_
-      }
+  $return = $SevOne.core_getEnabledPluginsByDeviceId($device.id)
+  $return | foreach {
+    Get-SevOnePlugin -Name $_
   }
+}
 }
 
 # Not implemented
