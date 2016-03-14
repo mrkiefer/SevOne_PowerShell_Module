@@ -461,6 +461,7 @@ begin {
     Write-Debug 'finished begin block'
   }
 process {
+    $return = @()
     switch ($PSCmdlet.ParameterSetName)
       {
         'Default' {
@@ -476,7 +477,7 @@ process {
             continue
           }
       }
-    $return | __ObjectClass__
+    $return.foreach{[objectClass]$_}
   }
 } 
 
