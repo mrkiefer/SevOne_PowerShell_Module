@@ -1788,25 +1788,45 @@ process {
 }#>
 
 function Optimize-SevOneWMIProxy {
-    [cmdletbinding()]
-    param ($device,
-        $WMIProxy
-    )
-    $max = $WMIProxy.count
-    Write-Debug "`$max = $max"
-    Write-Debug "`$Device.count $($device.count)"
-    $i = 0
-    foreach ($d in $device)
-    {
-        Write-Verbose 'in foreach block'
-        Write-Verbose "Device: $($d.name)"
-        Set-SevOneWMIPlugin -Proxy $WMIProxy[$i] -Device $d -ProxyOnly
-        Write-Debug "set proxy on $($d.name)"
-        $i++
-        Write-Verbose "`$i = $i"
-        if ($i -eq $max) {$i = 0}
-        Write-Debug "finished foreach loop for $($d.name)"
-    }    
+<#
+  .SYNOPSIS
+    Balances an array of devices between an array of wmi proxies
+
+  .DESCRIPTION
+    Balances an array of devices between an array of wmi proxies
+
+  .EXAMPLE
+    $Proxy = Get-SevOneWmiProxy
+
+    Optimize-SevOneWMIProxy -Proxy $Proxy -Device (get-SevOneDevice)
+
+    ----------------------------------------------------------------
+
+    Balances the devices between all the wmi proxies in an environment
+
+  .NOTES
+
+#>
+[cmdletbinding()]
+param (
+  [device[]]$Device,
+  [wmiProxy[]]$Proxy
+)
+$max = $WMIProxy.count
+Write-Debug "`$max = $max"
+Write-Debug "`$Device.count $($device.count)"
+$i = 0
+foreach ($d in $device)
+{
+  Write-Verbose 'in foreach block'
+  Write-Verbose "Device: $($d.name)"
+  Set-SevOneWMIPlugin -Proxy $WMIProxy[$i] -Device $d -ProxyOnly
+  Write-Debug "set proxy on $($d.name)"
+  $i++
+  Write-Verbose "`$i = $i"
+  if ($i -eq $max) {$i = 0}
+  Write-Debug "finished foreach loop for $($d.name)"
+}    
 }
 
 #endregion WMIProxy
