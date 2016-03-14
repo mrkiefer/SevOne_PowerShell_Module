@@ -130,18 +130,19 @@ param (
     [int]$Id
   )
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+}
 process {
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'none' {$return = $SevOne.user_getUsers()}
-        'Id' {$return = $SevOne.user_getUserById($Id)}
-      }
-    [User]$return
+  $return = @()
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'none' {$return = $SevOne.user_getUsers()}
+    'Id' {$return = $SevOne.user_getUserById($Id)}
   }
+  $return.foreach{[User]$_}
+}
 }
 
 #Still need to add a class for this
