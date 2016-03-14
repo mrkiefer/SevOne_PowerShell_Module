@@ -586,7 +586,7 @@ param (
     [PSObject]$Device,
 
     #
-    [parameter(
+    [parameter(Mandatory,
     Position=1,
     ParameterSetName='Plugin')]
     [ValidateSet(
@@ -620,12 +620,13 @@ begin {
       }
   }
 process {
+    $return = @()
     switch ($PSCmdlet.ParameterSetName)
       {
         'device' {$return = $SevOne.core_getObjectsByDeviceID($device.id)}
         'plugin' {$return = $SevOne.core_getObjectsByDeviceIDAndPlugin($device.id,$Plugin)}
       }
-    $return | __ObjectType__
+    $return.foreach{[Object]$_}
   }
 }
 
@@ -1963,6 +1964,7 @@ begin {
       }
   }
 process {
+    $return = @()
     switch ($PSCmdlet.ParameterSetName)
       {
         'Group' {
@@ -2016,7 +2018,7 @@ process {
       }
     if ($return)
       {
-        [device]$return
+        $return.foreach{[device]$_}
       }
   }
 }
