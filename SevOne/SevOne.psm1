@@ -1834,103 +1834,106 @@ foreach ($d in $device)
 #region Discovery
 
 function Enable-SevOneDiscovery {
+<##>
 param (
-    #
-    [parameter(Mandatory,
-    ParameterSetName='default',
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    $Device,
+  # Device
+  [parameter(Mandatory,
+  ParameterSetName='default',
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName)]
+  [device]$Device,
 
-    #
-    [parameter()]
-    [validateSet('automatic','manual','both')]
-    $Type = 'Automatic'
-  )
+  # Discovery Type
+  [parameter()]
+  [validateSet('automatic','manual','both')]
+  $Type = 'Automatic'
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
-  }
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+      throw 'Not connected to a SevOne instance'
+    }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    switch ($Type) {
-        'automatic' {
-            $return = $SevOne.core_setDeviceDiscovery($Device.id,'1')
-          }
-        'manual' {
-            $return = $SevOne.core_setDeviceManualDiscovery($Device.id,'1')
-          }
-        'both' {
-            $return = $SevOne.core_setDeviceDiscovery($Device.id,'1')
-            $return | __TestReturn__
-            $return = $SevOne.core_setDeviceManualDiscovery($Device.id,'1')
-          }
-      }
-    $return | __TestReturn__
+  switch ($Type) {
+    'automatic' {
+      $return = $SevOne.core_setDeviceDiscovery($Device.id,'1')
+    }
+    'manual' {
+      $return = $SevOne.core_setDeviceManualDiscovery($Device.id,'1')
+    }
+    'both' {
+      $return = $SevOne.core_setDeviceDiscovery($Device.id,'1')
+      $return | __TestReturn__
+      $return = $SevOne.core_setDeviceManualDiscovery($Device.id,'1')
+    }
   }
+  $return | __TestReturn__
+}
 }
 
 function Disable-SevOneDiscovery {
+<##>
 param (
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    $Device,
-    [parameter(ParameterSetName='default')]
-    [validateset('automatic','manual','all')]
-    [string]$Type
-  )
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName)]
+  [device]$Device,
+  [parameter(ParameterSetName='default')]
+  [validateset('automatic','manual','all')]
+  [string]$Type
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
-  }
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+      throw 'Not connected to a SevOne instance'
+    }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    switch ($Type) {
-        'automatic' {
-            $return = $SevOne.core_setDeviceDiscovery($Device.id,'0')
-          }
-        'manual' {
-            $return = $SevOne.core_setDeviceManualDiscovery($Device.id,'0')
-          }
-        'both' {
-            $return = $SevOne.core_setDeviceDiscovery($Device.id,'0')
-            $return | __TestReturn__
-            $return = $SevOne.core_setDeviceManualDiscovery($Device.id,'0')
-          }
-      }
-    $return | __TestReturn__
+  switch ($Type) {
+    'automatic' {
+      $return = $SevOne.core_setDeviceDiscovery($Device.id,'0')
+    }
+    'manual' {
+      $return = $SevOne.core_setDeviceManualDiscovery($Device.id,'0')
+    }
+    'both' {
+      $return = $SevOne.core_setDeviceDiscovery($Device.id,'0')
+      $return | __TestReturn__
+      $return = $SevOne.core_setDeviceManualDiscovery($Device.id,'0')
+    }
   }
+  $return | __TestReturn__
+}
 }
 
 function Start-SevOneDiscovery {
+<##>
 param (
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    $Device,
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName)]
+  [device]$Device,
 
-    [Parameter(ParameterSetName='Default')]
-    [switch]$Wait
-  )
+  [Parameter(ParameterSetName='Default')]
+  [switch]$Wait
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
-  }
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+      throw 'Not connected to a SevOne instance'
+    }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {  
   $return = $SevOne.core_rediscoverDevice($Device.id)
   $return | __TestReturn__
