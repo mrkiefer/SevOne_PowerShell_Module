@@ -872,6 +872,7 @@ begin {
     Write-Debug 'finished begin block'
   }
 process {
+    $return = @()
     switch ($PSCmdlet.ParameterSetName)
       {
         'default' {
@@ -883,7 +884,7 @@ process {
             continue
           }
       }
-    [Peer]$return
+    $return.foreach{[Peer]$_}
   }
 }
 
@@ -1070,6 +1071,10 @@ function Get-SevOnePlugin {
 #>
 [cmdletBinding(DefaultParameterSetName='default')]
 param (
+    [parameter(
+    Mandatory,
+    ParameterSetName='Name')]
+    $Name
   )
 begin {
     Write-Verbose 'Starting operation'
@@ -1080,13 +1085,20 @@ begin {
     Write-Debug 'finished begin block'
   }
 process {
+    $return = @()
     switch ($PSCmdlet.ParameterSetName)
       {
         'default' {
-            $return = $SevOne.core_getPlugins()
+          $return = $SevOne.core_getPlugins()
+        }
+        'name' {
+          $return = $SevOne.core_getPlugins().where{$_.name -match $name}
+          if ($return.count -eq 0) {
+            Write-Warning "No plugin found for $name"
           }
+        }
       }
-    $return | __PluginObject__
+    $return.foreach{[Plugin]$_}
   }
 end {}
   }
@@ -1320,10 +1332,7 @@ begin {
 process {
     $return = $SevOne.core_getEnabledPluginsByDeviceId($device.id)
     $return | foreach {
-        [pscustomobject]@{
-            ComputerName = $Device.Name
-            Plugin = $_
-          }
+        Get-SevOnePlugin -Name $_
       }
   }
 }
