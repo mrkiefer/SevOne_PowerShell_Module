@@ -542,17 +542,17 @@ param (
     [parameter(Mandatory,
     ValueFromPipelineByPropertyName,
     ParameterSetName='default')]
-    [PSObject]$Group,
+    [objectGroup]$Group,
     #
     [parameter(Mandatory,
     ValueFromPipelineByPropertyName,
     ParameterSetName='default')]
-    [PSObject]$Object,
+    [object]$Object,
     #
     [parameter(Mandatory,
     ValueFromPipelineByPropertyName,
     ParameterSetName='default')]
-    [PSObject]$Plugin
+    [plugin]$Plugin
   )
 begin {
     Write-Verbose 'Starting operation'
@@ -573,7 +573,7 @@ process {
       {
         0 {Write-Error "Could not add object, $($Object.name) to group" ; continue}
         default {
-            Write-Verbose 'Successfully created added device to group'
+            Write-Verbose 'Successfully added device to group'
             continue
           }
       }
