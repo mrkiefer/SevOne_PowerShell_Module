@@ -6,6 +6,10 @@ function __TestSevOneConnection__ { # Needs to be here until I figure out how to
   try {[bool]$SevOne.returnthis(1)} catch {$false}
 }
 
+function __userFactory__ {
+$SevOne.factory_User()
+}
+
 #$TimeZones = Get-Content -Path $PSScriptRoot\timezones.txt
 # Indicators, Objects
 
@@ -149,50 +153,58 @@ process {
 function Get-SevOneUserRole {
 <#
   .SYNOPSIS
+    Gets the available SevOne User Roles
 
   .DESCRIPTION
+    Use this function to either gather a single user role or all available roles
 
   .EXAMPLE
+    Get-SevOneUserRole
 
-  .EXAMPLE
+    -------------------------
 
-  .EXAMPLE
+    Returns all available user roles
 
   .NOTES
 #>
 [cmdletbinding(DefaultParameterSetName='none')]
 param (
-    [Parameter(Mandatory,
-    ParameterSetName='Id')]
-    $Id
-  )
+  [Parameter(Mandatory,
+  ParameterSetName='Id')]
+  $Id
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+}
 process {
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'none' {$return = $SevOne.user_getRoles()}
-        'id' {$return = $SevOne.user_getRoleById($Id)}
-      }
-    $return | __userRole__
+  $return = @()
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'none' {$return = $SevOne.user_getRoles()}
+    'id' {$return = $SevOne.user_getRoleById($Id)}
   }
+  $return.foreach{[userRole]$_}
+}
 }
 
 function New-SevOneUser {
 <#
   .SYNOPSIS
+    Creates a new SevOne user
 
   .DESCRIPTION
+    Use this function to create a new SevOne User
 
   .EXAMPLE
+    $role = Get-SevOneUserRole -id 2
 
-  .EXAMPLE
+    New-SevOneUser -UserCredential (get-Credential User1) -EmailAddress user@contoso.com -Role $role -FirstName user -LastName 1 -Authentication SevOne -Passthrough
 
-  .EXAMPLE
+    ------------------------------------
 
+  
   .NOTES
 #>
 [cmdletbinding()]
@@ -202,13 +214,13 @@ param (
     [parameter(Mandatory)]
     [string]$EmailAddress,
     [parameter(Mandatory)]
-    $Role,
+    [userRole]$Role,
     [parameter(Mandatory)]
     [string]$FirstName,
     [parameter(Mandatory)]
     [string]$LastName,
     [parameter(Mandatory)]
-    [validateset('sevone','LDAP','TACACS','RADIUS')]
+    [validateset('SevOne','LDAP','TACACS','RADIUS')]
     [string]$Authentication,
     [switch]$Passthrough
   )
@@ -225,7 +237,7 @@ process {
     $user.username = $UserCredential.UserName
     $user.Authentication = $Authentication
     Write-Debug "User loaded for $($UserCredential.UserName), ready to createuser()"
-    $return = $SevOne.user_createUser($user,$Role.id,$UserCredential.GetNetworkCredential().Password)
+    $return = $SevOne.user_createUser($UserCredential.UserName,$Role.id,$UserCredential.GetNetworkCredential().Password)
     if ($Passthrough) {
         Get-SevOneUser -Id $return
       }

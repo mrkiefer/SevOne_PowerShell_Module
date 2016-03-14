@@ -2,7 +2,7 @@ class SevOne {
 
 }
 
-class Device : SevOne {
+class device : SevOne {
   #Properties
   [int]$id
   [string]$name
@@ -37,7 +37,7 @@ class Device : SevOne {
   [string]$timezone
 
   #Constructors
-  Device (
+  device (
       $base
     )
   {
@@ -77,7 +77,7 @@ class Device : SevOne {
   #Methods
 }
 
-class Object : SevOne {
+class object : SevOne {
   #Properties
   [int]$id
   [int]$deviceId
@@ -94,9 +94,9 @@ class Object : SevOne {
   [bool]$deletedStatus
 
   #Constructors
-  Object ( ) { }
+  object ( ) { }
 
-  Object ($obj) {
+  object ($obj) {
     $this.id = $obj.id
     $this.deviceID = $obj.deviceId
     $this.pluginString = $obj.pluginString
@@ -114,16 +114,16 @@ class Object : SevOne {
 
 }
 
-class Plugin : SevOne {
+class plugin : SevOne {
   #Properties
   [string]$name
   [int]$id
   [string]$type
 
   #Constructors
-  Plugin ( ) { }
+  plugin ( ) { }
 
-  Plugin ($raw) {
+  plugin ($raw) {
     $this.name = $raw.name
     $this.id = $raw.id
     $this.type = $raw.objectString
@@ -131,7 +131,7 @@ class Plugin : SevOne {
 
 }
 
-class Threshold : SevOne {
+class threshold : SevOne {
   #Properties
   [int]$id
   [string]$name
@@ -158,9 +158,9 @@ class Threshold : SevOne {
   [int]$appendConditionMessages
 
   #Constructors
-  Threshold ( ) { }
+  threshold ( ) { }
 
-  Threshold ($raw) {
+  threshold ($raw) {
     $this.id = $raw.id
     $this.name = $raw.name
     $this.description = $raw.description 
@@ -188,7 +188,7 @@ class Threshold : SevOne {
 
 }
 
-class Alert : SevOne {
+class alert : SevOne {
   #Properties
   [int]$id
   [int]$severity
@@ -210,9 +210,9 @@ class Alert : SevOne {
   [bool]$automaticallyProcessed
 
   #Constructors
-  Alert ( ) { }
+  alert ( ) { }
 
-  Alert ($raw) {
+  alert ($raw) {
     $this.id = $raw.id
     $this.severity = $raw.severity
     $this.isCleared = $raw.isCleared
@@ -235,54 +235,54 @@ class Alert : SevOne {
 
 }
 
-class ObjectClass : SevOne {
+class objectClass : SevOne {
   #Properties
   [string]$name
   [int]$id 
 
   #Constructors
-  ObjectClass () {}
+  objectClass () {}
 
-  ObjectClass ($raw) {
+  objectClass ($raw) {
     $this.name = $raw.name
     $this.id = $raw.id
   }
 
 }
 
-class DeviceGroup : SevOne {
+class deviceGroup : SevOne {
   #Properties
   [int]$id
   [int]$parentid
   [string]$name
 
   #Constructors
-  DeviceGroup () {}
+  deviceGroup () {}
 
-  DeviceGroup ($raw) {
+  deviceGroup ($raw) {
     $this.id = $raw.id
     $this.parentid = $raw.parentid
     $this.name = $raw.name
   }
 }
 
-class ObjectGroup : SevOne {
+class objectGroup : SevOne {
   #Properties
   [int]$id
   [int]$parentid
   [string]$name
 
   #Constructors
-  ObjectGroup () {}
+  objectGroup () {}
 
-  ObjectGroup ($raw) {
+  objectGroup ($raw) {
     $this.id = $raw.id
     $this.parentid = $raw.parentid
     $this.name = $raw.name
   }
 }
 
-class Peer : SevOne {
+class peer : SevOne {
   #Properties
   [int]$serverId
   [string]$name
@@ -298,8 +298,9 @@ class Peer : SevOne {
   [string]$model
 
   #Constructors
-  Peer () {}
-  Peer ($raw) {
+  peer () {}
+  
+  peer ($raw) {
     $this.serverId = $_.serverId 
     $this.name = $_.name 
     $this.ip = $_.ip
@@ -316,7 +317,7 @@ class Peer : SevOne {
 
 }
 
-class User : SevOne {
+class user : SevOne {
   #Properties
   [int]$id
   [string]$username
@@ -336,9 +337,9 @@ class User : SevOne {
   [int]$isSynced
 
   #Constructors
-  User () {}
+  user () {}
 
-  User ($raw) {
+  user ($raw) {
     $this.id = $raw.id
     $this.username = $raw.username
     $this.email = $raw.email
@@ -356,7 +357,27 @@ class User : SevOne {
     $this.timezone = $raw.timezone
     $this.isSynced = $raw.isSynced
   }
+
+  # Methods
+
 }
+
+class userRole : SevOne {
+  #Properties
+  [int]$id
+  [int]$parentid
+  [string]$name
+
+  #Constructors
+  userRole () {}
+
+  userRole ($raw) {
+    $this.id = $raw.id
+    $this.parentid = $raw.parentid
+    $this.name = $raw.name
+  }
+}
+
 
 #Classes remaining:
 # ObjectType
@@ -364,3 +385,6 @@ class User : SevOne {
 # Indicator
 # Report
 # Graph
+# UserRole
+
+

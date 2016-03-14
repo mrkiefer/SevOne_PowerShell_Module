@@ -36,10 +36,6 @@ $obj = [pscustomobject]@{
   $obj
 }
 
-function __userFactory__ {
-$SevOne.factory_User()
-}
-
 Function __fromUNIXTime__ {
 Param
   (
