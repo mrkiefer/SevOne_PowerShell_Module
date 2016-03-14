@@ -396,6 +396,23 @@ class objectType : SevOne {
   }
 }
 
+class wmiProxy : SevOne {
+  #Properties
+  [int]$id
+  [string]$ip
+  [string]$name
+  [int]$port
+
+  #Constructors
+  wmiProxy () {}
+
+  wmiProxy ($raw) {
+    $this.id = $raw.id
+    $this.ip = $raw.ip
+    $this.name = $raw.name
+    $this.port = $raw.port
+  }
+}
 
 #Classes remaining:
 # ObjectType

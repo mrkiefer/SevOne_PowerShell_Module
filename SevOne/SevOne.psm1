@@ -1531,61 +1531,67 @@ param (
 function Get-SevOneWMIProxy {
 <#
   .SYNOPSIS
+    Gets SevOne WMI Proxy objects
 
   .DESCRIPTION
+    Use this function to gather SevOne WMI proxy objects
 
   .EXAMPLE
-    
+    Get-SevOneWMIProxy
 
-  .EXAMPLE
-    
+    -------------------------------
 
-  .EXAMPLE
-    
+    Gathers all SevOne WMI proxy objects
 
   .NOTES
     At this point there is no support for wildcards.
 #>
 [cmdletbinding(DefaultParameterSetName='default')]
 param (
-    [Parameter(Mandatory,
-    ParameterSetName='filter')]
-    $filter,
+  [Parameter(Mandatory,
+  ParameterSetName='filter')]
+  $filter,
 
-    [Parameter(Mandatory,
-    ParameterSetName='id')]
-    [alias('Proxyid')]
-    $ID,
+  [Parameter(Mandatory,
+  ParameterSetName='id')]
+  [alias('Proxyid')]
+  $ID,
 
-    [Parameter(Mandatory,
-    ParameterSetName='device',
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    $Device
-  )
+  [Parameter(Mandatory,
+  ParameterSetName='device',
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName)]
+  $Device
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+}
 process {
-    Write-Verbose 'Opening process block'
-    Write-Debug "Switch on parameter set name, current value: $($PSCmdlet.ParameterSetName)"
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        id { $SevOne.plugin_wmi_getProxyById($id) ; continue }
-        device { $return =  $SevOne.plugin_wmi_getWmiDevicesById($device.ID) 
-            $return | Add-Member -MemberType NoteProperty -Name Proxy -Value (Get-SevOneWMIProxy -id $return.proxyid).name -PassThru
-          }
-        'filter' {
-            Write-Debug 'in filter block'
-            $SevOne.plugin_wmi_findProxy($filter)
-            Write-Debug 'finished finding proxies'
-            #filter = ,@('Name',$name),@('ip',$ip)         
-          }
-        'default' { $SevOne.plugin_wmi_findProxy('') ; continue}
-      }
+  Write-Verbose 'Opening process block'
+  Write-Debug "Switch on parameter set name, current value: $($PSCmdlet.ParameterSetName)"
+  $return = @()
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    id { 
+      $return = $SevOne.plugin_wmi_getProxyById($id) 
+    }
+    device { 
+      $return = $SevOne.plugin_wmi_getWmiDevicesById($device.ID)
+    }
+    'filter' {
+      Write-Debug 'in filter block'
+      $return = $SevOne.plugin_wmi_findProxy($filter)
+      Write-Debug 'finished finding proxies'
+      #filter = ,@('Name',$name),@('ip',$ip)         
+    }
+    'default' { 
+      $return = $SevOne.plugin_wmi_findProxy('')
+    }
   }
+  $return.foreach{[wmiProxy]$_}
+}
 }
 
 function New-SevOneWMIProxy {
@@ -1594,10 +1600,6 @@ function New-SevOneWMIProxy {
 
   .DESCRIPTION
 
-  .EXAMPLE
-    
-  .EXAMPLE
-    
   .EXAMPLE
     
   .NOTES
