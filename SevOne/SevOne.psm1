@@ -489,11 +489,11 @@ param (
     ValueFromPipeline,
     ValueFromPipelineByPropertyName,
     ParameterSetName='default')]
-    [PSObject]$Device,
+    [device]$Device,
     [parameter(Mandatory,
     ValueFromPipelineByPropertyName,
     ParameterSetName='default')]
-    [PSObject]$Group,
+    [deviceGroup]$Group,
     [parameter(Mandatory,
     ValueFromPipeline,
     ValueFromPipelineByPropertyName,
@@ -526,7 +526,7 @@ process {
       {
         0 {Write-Error 'Could not add device to group' ; continue}
         default {
-            Write-Verbose 'Successfully created added device to group'
+            Write-Verbose 'Successfully added device to group'
             continue
           }
       }
