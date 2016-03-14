@@ -1972,24 +1972,36 @@ param (
   )
 begin {} #Add test connection block
 process {
-    $keys = @()
-    $null = $keys += $SevOne.factory_KeyValue('peerId',$Peer.serverid)
-    if ($Starttime ) {$null = $keys += $SevOne.factory_KeyValue('startTime',($Starttime | Convertto-UNIXTime)) }
-    if ($Endtime ) {$null = $keys += $SevOne.factory_KeyValue('endTime',($Endtime | Convertto-UNIXTime)) } 
-    if ($OID) {$null =  $keys += $SevOne.factory_KeyValue('oid',$OID)}
-    if ($IsLogged -ne $null) {$null = $keys += $SevOne.factory_KeyValue('isLogged',[int]$IsLogged)}
-    if ($PageSize) {$null = $keys += $SevOne.factory_KeyValue('pageSize',$PageSize)}
-    if ($PageNumber) {$null = $keys += $SevOne.factory_KeyValue('pageNumber',$PageNumber)}
-    if ($timeout) {
-        $old = $SevOne.Timeout
-        $SevOne.Timeout = $timeout.Milliseconds
-      }
-    Write-Debug 'Finished Creating $keys'
-    $SevOne.trap_get($keys)
-    if ($old) {
-        $SevOne.Timeout = $old
-      }
+  $keys = @()
+  $null = $keys += $SevOne.factory_KeyValue('peerId',$Peer.serverid)
+  if ($Starttime ) {
+    $null = $keys += $SevOne.factory_KeyValue('startTime',($Starttime | Convertto-UNIXTime)) 
   }
+  if ($Endtime ) {
+    $null = $keys += $SevOne.factory_KeyValue('endTime',($Endtime | Convertto-UNIXTime)) 
+  } 
+  if ($OID) {
+    $null =  $keys += $SevOne.factory_KeyValue('oid',$OID)
+  }
+  if ($IsLogged -ne $null) {
+    $null = $keys += $SevOne.factory_KeyValue('isLogged',[int]$IsLogged)
+  }
+  if ($PageSize) {
+    $null = $keys += $SevOne.factory_KeyValue('pageSize',$PageSize)
+  }
+  if ($PageNumber) {
+    $null = $keys += $SevOne.factory_KeyValue('pageNumber',$PageNumber)
+  }
+  if ($timeout) {
+    $old = $SevOne.Timeout
+    $SevOne.Timeout = $timeout.Milliseconds
+  }
+  Write-Debug 'Finished Creating $keys'
+  $SevOne.trap_get($keys)
+  if ($old) {
+    $SevOne.Timeout = $old
+  }
+}
 }
 
 function Get-SevOneAlert {
@@ -2024,7 +2036,7 @@ param
     ValueFromPipelineByPropertyName,
     ValueFromPipeline,
     ParameterSetName='Device')]
-    [PSObject]$Device,
+    [device]$Device,
 
     # The time to start pulling alerts
     [parameter(ParameterSetName='Device')]
@@ -2085,27 +2097,26 @@ function Close-SevOneAlert {
     This one is working really well, the default message may change over time.
 #>
 [cmdletbinding()]
-param 
-  (
-    [Parameter(Mandatory,
-    position=0,
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    $Alert,
-    [string]$Message = 'Closed via API'
-  )
+param (
+  [Parameter(Mandatory,
+  position=0,
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName)]
+  [alert]$Alert,
+  [string]$Message = 'Closed via API'
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+}
 process{
-    try {
-        $return = $SevOne.alert_clearByAlertId($Alert.ID,$Message)
-        $return | __TestReturn__
-      }
-    catch {}
+  try {
+    $return = $SevOne.alert_clearByAlertId($Alert.ID,$Message)
+    $return | __TestReturn__
   }
+  catch {}
+}
 end {}
 }
 
@@ -2140,268 +2151,264 @@ function Get-SevOneDevice {
     At this point there is no support for wildcards.
 #>
 [cmdletbinding(DefaultParameterSetName='default')]
-param
-  (
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Name',
-    ValueFromPipelineByPropertyName)]
-    [string]$Name,
+param (
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Name',
+  ValueFromPipelineByPropertyName)]
+  [string]$Name,
     
-    #
-    [parameter(Mandatory,
-    ParameterSetName='ID',
-    ValueFromPipelineByPropertyName)]
-    [int]$ID,
+  #
+  [parameter(Mandatory,
+  ParameterSetName='ID',
+  ValueFromPipelineByPropertyName)]
+  [int]$ID,
     
-    #
-    [parameter(Mandatory,
-    ParameterSetName='IPAddress',
-    ValueFromPipelineByPropertyName)]
-    [IPAddress]$IPAddress,
+  #
+  [parameter(Mandatory,
+  ParameterSetName='IPAddress',
+  ValueFromPipelineByPropertyName)]
+  [IPAddress]$IPAddress,
 
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Group')]
-    $Group
-  )
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Group')]
+  $Group
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+}
 process {
-    $return = @()
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'Group' {
-            $return = $SevOne.group_getDevicesByGroupId($Group.id)
-            #$return
-          }
-        'default' { 
-            Write-Debug 'in default block'
-            try {$return = $SevOne.core_getDevices()} catch {
-                $return = $null
-                Write-Error $_.exception.message
-              }
-            continue
-          }
-        'Name' { 
-            Write-Debug 'in name block'
-            try {
-                $return =  $SevOne.core_getDeviceByName($Name)
-                Write-Debug 'Test $return to ensure object is not blank'
-                if (-not $return.id)
-                  {throw "Empty object returned for $Name"}
-              } 
-            catch {
-                $return = $null
-                Write-Error "No device found with name: $Name"
-                Write-Error $_.exception.message
-              }
-            continue
-          }
-        'ID' { 
-            Write-Debug 'in id block'
-            try {$return = $SevOne.core_getDeviceById($ID)} catch {
-                $return = $null
-                Write-Error "No device found with id: $id"
-                Write-Error $_.exception.message
-              }
-            continue
-          }
-        'IPAddress' { 
-            Write-Debug 'in IPAddress block'
-            try {
-                $return = $SevOne.core_getDeviceById(($SevOne.core_getDeviceIdByIp($IPAddress.IPAddressToString)))
-              } 
-            catch {
-                $return = $null
-                Write-Error "No device found with IPAddress: $($IPAddress.IPAddressToString)"
-                Write-Error $_.exception.message
-              }
-            continue
+  $return = @()
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'Group' {
+      $return = $SevOne.group_getDevicesByGroupId($Group.id)
+      #$return
+    }
+    'default' { 
+      Write-Debug 'in default block'
+      try {$return = $SevOne.core_getDevices()} catch {
+          $return = $null
+          Write-Error $_.exception.message
         }
-      }
-    if ($return)
-      {
-        $return.foreach{[device]$_}
-      }
+      continue
+    }
+    'Name' { 
+      Write-Debug 'in name block'
+      try {
+          $return =  $SevOne.core_getDeviceByName($Name)
+          Write-Debug 'Test $return to ensure object is not blank'
+          if (-not $return.id)
+            {throw "Empty object returned for $Name"}
+        } 
+      catch {
+          $return = $null
+          Write-Error "No device found with name: $Name"
+          Write-Error $_.exception.message
+        }
+      continue
+    }
+    'ID' { 
+      Write-Debug 'in id block'
+      try {$return = $SevOne.core_getDeviceById($ID)} catch {
+          $return = $null
+          Write-Error "No device found with id: $id"
+          Write-Error $_.exception.message
+        }
+      continue
+    }
+    'IPAddress' { 
+      Write-Debug 'in IPAddress block'
+      try {
+          $return = $SevOne.core_getDeviceById(($SevOne.core_getDeviceIdByIp($IPAddress.IPAddressToString)))
+        } 
+      catch {
+          $return = $null
+          Write-Error "No device found with IPAddress: $($IPAddress.IPAddressToString)"
+          Write-Error $_.exception.message
+        }
+      continue
+    }
   }
+  if ($return)
+  {
+    $return.foreach{[device]$_}
+  }
+}
 }
 
 function New-SevOneDevice {
 <##>
 [cmdletBinding(DefaultParameterSetName='group')]
 param (    
-    #
-    [Parameter(Mandatory,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='group')]
-    [string]$Name,
+  #
+  [Parameter(Mandatory,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='group')]
+  [string]$Name,
     
-    #
-    [Parameter(Mandatory,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='group')]
-    [ipaddress]$IPAddress,
+  #
+  [Parameter(Mandatory,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='group')]
+  [ipaddress]$IPAddress,
     
-    #
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='group')]
-    $Peer = (Get-SevOnePeer)[0], # this is actually pretty hokey, will need to find a better way to do this.
+  #
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='group')]
+  $Peer = (Get-SevOnePeer)[0], # this is actually pretty hokey, will need to find a better way to do this.
     
-    #
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='group')]
-    $Group = (Get-SevOneDeviceGroup -Name 'All Device Groups'),
+  #
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='group')]
+  [deviceGroup]$Group = (Get-SevOneDeviceGroup -Name 'All Device Groups'),
 
-    #
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='group')]
-    [ValidateLength(1,255)]
-    [string]$Description = '',
+  #
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='group')]
+  [ValidateLength(1,255)]
+  [string]$Description = '',
 
-    #
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='group')]
-    [switch]$PassThrough
-  )
+  #
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='group')]
+  [switch]$PassThrough
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    switch ($PSCmdlet.ParameterSetName)
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'group' {
+      Write-Debug 'In group block'
+      $return = $SevOne.core_createDeviceInGroup($Name,$IPAddress.IPAddressToString,$Peer.id,$Description,$Group.id)
+      Write-Verbose 'finished create operation, testing $return'
+      Write-Debug "`$return = $return"
+      switch ($return)
       {
-        'group' {
-            Write-Debug 'In group block'
-            $return = $SevOne.core_createDeviceInGroup($Name,$IPAddress.IPAddressToString,$Peer.id,$Description,$Group.id)
-            Write-Verbose 'finished create operation, testing $return'
-            Write-Debug "`$return = $return"
-            switch ($return)
-              {
-                -1 {Write-Error "Could not add device: $Name" ; continue}
-                -2 {Write-Error "Could not find peer: $($Peer.Name)" ; continue}
-                -3 {Write-Error "$($Peer.Name) does not support adding devices" ; continue}
-                0 {Write-Error "failed creating device $name" ; continue}
-                default {
-                    Write-Verbose "Successfully created device $Name"
-                    if ($PassThrough) {Get-SevOneDevice -ID $return}
-                  }
-              }
-          }
+        -1 {Write-Error "Could not add device: $Name" ; continue}
+        -2 {Write-Error "Could not find peer: $($Peer.Name)" ; continue}
+        -3 {Write-Error "$($Peer.Name) does not support adding devices" ; continue}
+        0 {Write-Error "failed creating device $name" ; continue}
+        default {
+          Write-Verbose "Successfully created device $Name"
+          if ($PassThrough) {Get-SevOneDevice -ID $return}
+        }
       }
+    }
   }
+}
 end {}
 }
 
-function Set-SevOneDevice { # currently a pretty sad function, we can change the polling interval and the timezone.
-<##>
+function Set-SevOneDevice {
+<#
+  .SYNOPSIS
+    Modifies an existing SevOne object
+
+  .DESCRIPTION
+    Use this function to modify an existing device.  Can override standard properties on the device.
+
+  .NOTES
+    
+#>
 [cmdletBinding(DefaultParameterSetName='default')]
 param ( 
-    #
-    [Parameter(Mandatory,
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    $Device,
-       
+  #
+  [Parameter(Mandatory,
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [device]$Device,     
     
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    [string]$Name,
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [string]$Name,
 
-    #
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    [string]$AlternateName,
+  #
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [string]$AlternateName,
 
-    #
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    [ipaddress]$IPAddress,
+  #
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [ipaddress]$IPAddress,
 
-    #
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    [validatelength(0,255)]
-    [string]$Description = '',
+  #
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [validatelength(0,255)]
+  [string]$Description = '',
 
-    #
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    #[validateSet({$TimeZones})] # try and imporve this to support tab completion
-    [string]$TimeZone,
+  #
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [string]$TimeZone,
 
-    #
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    [timespan]$PollingInterval,
+  #
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [timespan]$PollingInterval,
 
     
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    [bool]$Polling
-
-    
-  )
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [bool]$Polling 
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    Write-Verbose "Opening Process block for $($Device.name)"
+  Write-Verbose "Opening Process block for $($Device.name)"
     
-    $xml = $SevOne.core_getDeviceById($device.id)
-    Write-Debug 'loaded $xml'
-    #region SetValues
-    if ($Name) {$xml.name = $Name}
-    if ($AlternateName) {$xml.alternateName = $AlternateName}
-    if ($IPAddress) {$xml.ip = $IPAddress.IPAddressToString}
-    if ($Description) {$xml.description = $Description}
-    if ($TimeZone) {$xml.timezone = $TimeZone}
-    if ($PollingInterval) {$xml.pollFrequency = $PollingInterval.TotalSeconds}
-    #if ($PollingConcurrency) {$xml.p}
-    if ($Polling) {$xml.disablePolling = [int](-not $Polling) }
-    #if ($DiscoveryLevel) {$xml.discoverPriority = }
-    if ($SNMPVersion) {$xml.snmpVersion = $SNMPVersion}
-    if ($SNMPROCommunity) {$xml.snmpRoCommunity = $SNMPROCommunity}
-    if ($SNMPRwCommunity) {$xml.snmpRwCommunity = $SNMPRwCommunity}
-    Write-Debug 'Finished modifying XML'
-    #endregion SetValues
-    $return = $SevOne.core_setDeviceInformation($xml)
-    Write-Debug 'Finished setting device, $return is about to be tested'
-    $return | __TestReturn__
-    <#if ($TimeZone) {
-        $return = $SevOne.core_setDeviceTimezone($device.id, $TimeZone)
-        $return | __TestReturn__
-      }
-    if ($PollingInterval) {
-        $return = $SevOne.core_setDevicePollingFrequency($device.id, $PollingInterval.TotalSeconds)
-        $return | __TestReturn__
-      }#>
-    Write-Verbose "Succesfully modified $($device.name)"
-  }
+  $xml = $SevOne.core_getDeviceById($device.id)
+  Write-Debug 'loaded $xml'
+  #region SetValues
+  if ($Name) {$xml.name = $Name}
+  if ($AlternateName) {$xml.alternateName = $AlternateName}
+  if ($IPAddress) {$xml.ip = $IPAddress.IPAddressToString}
+  if ($Description) {$xml.description = $Description}
+  if ($TimeZone) {$xml.timezone = $TimeZone}
+  if ($PollingInterval) {$xml.pollFrequency = $PollingInterval.TotalSeconds}
+  #if ($PollingConcurrency) {$xml.p}
+  if ($Polling) {$xml.disablePolling = [int](-not $Polling) }
+  #if ($DiscoveryLevel) {$xml.discoverPriority = }
+  if ($SNMPVersion) {$xml.snmpVersion = $SNMPVersion}
+  if ($SNMPROCommunity) {$xml.snmpRoCommunity = $SNMPROCommunity}
+  if ($SNMPRwCommunity) {$xml.snmpRwCommunity = $SNMPRwCommunity}
+  Write-Debug 'Finished modifying XML'
+  #endregion SetValues
+  $return = $SevOne.core_setDeviceInformation($xml)
+  Write-Debug 'Finished setting device, $return is about to be tested'
+  $return | __TestReturn__
+  Write-Verbose "Succesfully modified $($device.name)"
+}
 }
 
 #endregion Devices
@@ -2780,23 +2787,23 @@ function Get-SevOneIndicator {
 <##>
 [cmdletbinding(DefaultParameterSetName='device')]
 param (
-    # The Device that will be associated with Alarms pulled
-    [parameter(Mandatory,
-    Position=0,
-    ValueFromPipelineByPropertyName,
-    ValueFromPipeline,
-    ParameterSetName='device')]
-    [PSObject]$Device,
+  # The Device that will be associated with Alarms pulled
+  [parameter(Mandatory,
+  Position=0,
+  ValueFromPipelineByPropertyName,
+  ValueFromPipeline,
+  ParameterSetName='device')]
+  [device]$Device,
 
-    # Set the plugin for pulling the objects
-    [parameter(Mandatory,
-    Position=1,
-    ParameterSetName='device')]
-    [parameter(
-    Position=1,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='Object')]
-    [ValidateSet(
+  # Set the plugin for pulling the objects
+  [parameter(Mandatory,
+  Position=1,
+  ParameterSetName='device')]
+  [parameter(
+  Position=1,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='Object')]
+  [ValidateSet(
       'COC',
       'CALLMANAGER',
       'CALLMANAGERCDR',
@@ -2819,53 +2826,54 @@ param (
       'WMI',
       'BULKDATA'
     )]
-    [string]$Plugin,
+  [string]$Plugin,
 
-    # The Device that will be associated with Alarms pulled
-    [parameter(Mandatory,
-    Position=0,
-    ValueFromPipelineByPropertyName,
-    ValueFromPipeline,
-    ParameterSetName='Object')]
-    [PSObject]$Object,
+  # The Device that will be associated with Alarms pulled
+  [parameter(Mandatory,
+  Position=0,
+  ValueFromPipelineByPropertyName,
+  ValueFromPipeline,
+  ParameterSetName='Object')]
+  [object]$Object,
 
-    [parameter(Mandatory,
-    Position=0,
-    ValueFromPipelineByPropertyName,
-    ValueFromPipeline,
-    ParameterSetName='objectType')]
-    [PSObject]$ObjectType
-  )
+  [parameter(Mandatory,
+  Position=0,
+  ValueFromPipelineByPropertyName,
+  ValueFromPipeline,
+  ParameterSetName='objectType')]
+  [objectType]$ObjectType
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    $i = 0
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+  $i = 0
+}
 process {
-    $i ++
-    Write-Verbose "Starting process block: $i"
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'device' {
-          Write-Verbose 'in device block'
-          $method = "plugin_$plugin`_getIndicatorsByDeviceId"
-          Write-Debug '$Method set, ready to draw indicators'
-          $return = $SevOne.$method($Device.id)
-        }
-        'object' {
-          $Plugin = $Object.pluginString
-          Write-Verbose 'in Object Block'
-          $method = "plugin_$plugin`_getIndicatorsByObject"
-          Write-Debug '$Method set, ready to draw indicators'
-          $return = $SevOne.$method($Object.deviceid,$Object.name)
-        }
-        'objectType' {
-        
-        }
-      }
-    $return
+  $i ++
+  Write-Verbose "Starting process block: $i"
+  $return = @()
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'device' {
+      Write-Verbose 'in device block'
+      $method = "plugin_$plugin`_getIndicatorsByDeviceId"
+      Write-Debug '$Method set, ready to draw indicators'
+      $return = $SevOne.$method($Device.id)
+    }
+    'object' {
+      $Plugin = $Object.pluginString
+      Write-Verbose 'in Object Block'
+      $method = "plugin_$plugin`_getIndicatorsByObject"
+      Write-Debug '$Method set, ready to draw indicators'
+      $return = $SevOne.$method($Object.deviceid,$Object.name)
+    }
+    'objectType' {
+      Write-Warning 'Not implemented, sucks to be you'
+    }
   }
+  $return.foreach{[indicator]$_}
+}
 }
 
 function Remove-SevOneItem { # need to support removing Objects and ObjectTypes, Users and UserRoles
@@ -2887,150 +2895,151 @@ function Remove-SevOneItem { # need to support removing Objects and ObjectTypes,
 #>
 [cmdletbinding(SupportsShouldProcess=$true,DefaultParameterSetName='default',ConfirmImpact='high')]
 param (
-    #
-    [parameter(Mandatory,
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    $Target
-  )
+  #
+  [parameter(Mandatory,
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  $Target
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    Write-Verbose "Opening process block for $($Target.name)"
-    if ($PSCmdlet.ShouldProcess("$($Target.name)","Remove SevOne Item"))
-      {
-        Write-Debug 'Passed confirm point, about to test object type'
-        switch ($Target | __SevOneType__)
-          {
-            'deviceGroup' {
-                $return = $SevOne.group_deleteDeviceGroup($Target.id)
-                Write-Debug 'finished generating $return'
-                if ($return -ne 1) {
-                    Write-Debug 'in failure block'
-                    Write-Error "failed to delete $($Target.name)"
-                  }
-                continue
-              }
-            'ObjectGroup' {
-                $return = $SevOne.group_deleteObjectGroup($Target.id)
-                Write-Debug 'finished generating $return'
-                if ($return -ne 1) {
-                    Write-Debug 'in failure block'
-                    Write-Error "failed to delete $($Target.name)"
-                  }
-                continue
-              }
-            'deviceClass' {
-                $return = $SevOne.group_deleteDeviceClass($target.id)
-                if ($return -ne 1) {
-                    Write-Error "failed to delete $($Target.name)"
-                  }
-                continue
-              }
-            'ObjectClass' {
-                $return = $SevOne.group_deleteObjectClass($Target.id)
-                Write-Debug 'finished generating $return'
-                if ($return -ne 1) {
-                    Write-Debug 'in failure block'
-                    Write-Error "failed to delete $($Target.name)"
-                  }
-                continue
-              }
-            'device' {
-                $return = $SevOne.core_deleteDevice($Target.id)
-                Write-Debug 'finished generating $return'
-                if ($return -ne 1) {
-                    Write-Debug 'in failure block'
-                    Write-Error "failed to delete $($Target.name)"
-                  }
-                continue
-              }
-            'object' {
-                $Method = "plugin_$($Target.pluginString)_deleteObject"
-                $return = $SevOne.$Method($Target.deviceId,$Target.id)
-                Write-Debug 'finished generating $return'
-                if ($return -ne 1) {
-                    Write-Debug 'in failure block'
-                    Write-Error "failed to delete $($Target.name)"
-                  }
-                continue
-              }
-            default {throw 'Deletion activities not defined'}
+  Write-Verbose "Opening process block for $($Target.name)"
+  if ($PSCmdlet.ShouldProcess("$($Target.name)","Remove SevOne Item"))
+  {
+    Write-Debug 'Passed confirm point, about to test object type'
+    switch ($Target.gettype().fullname)
+    {
+      'deviceGroup' {
+        $return = $SevOne.group_deleteDeviceGroup($Target.id)
+        Write-Debug 'finished generating $return'
+        if ($return -ne 1) {
+            Write-Debug 'in failure block'
+            Write-Error "failed to delete $($Target.name)"
           }
+        continue
       }
+      'objectGroup' {
+        $return = $SevOne.group_deleteObjectGroup($Target.id)
+        Write-Debug 'finished generating $return'
+        if ($return -ne 1) {
+            Write-Debug 'in failure block'
+            Write-Error "failed to delete $($Target.name)"
+          }
+        continue
+      }
+      'deviceClass' {
+        $return = $SevOne.group_deleteDeviceClass($target.id)
+        if ($return -ne 1) {
+            Write-Error "failed to delete $($Target.name)"
+          }
+        continue
+      }
+      'objectClass' {
+        $return = $SevOne.group_deleteObjectClass($Target.id)
+        Write-Debug 'finished generating $return'
+        if ($return -ne 1) {
+            Write-Debug 'in failure block'
+            Write-Error "failed to delete $($Target.name)"
+          }
+        continue
+      }
+      'device' {
+        $return = $SevOne.core_deleteDevice($Target.id)
+        Write-Debug 'finished generating $return'
+        if ($return -ne 1) {
+            Write-Debug 'in failure block'
+            Write-Error "failed to delete $($Target.name)"
+          }
+        continue
+      }
+      'object' {
+        $Method = "plugin_$($Target.pluginString)_deleteObject"
+        $return = $SevOne.$Method($Target.deviceId,$Target.id)
+        Write-Debug 'finished generating $return'
+        if ($return -ne 1) {
+            Write-Debug 'in failure block'
+            Write-Error "failed to delete $($Target.name)"
+          }
+        continue
+      }
+      default {throw 'Deletion activities not defined'}
+    }
   }
+}
 }
 
 function Get-SevOneThreshold {
 <##>
 [cmdletbinding(DefaultParameterSetName='device')]
 param (
-    #
-    [Parameter(Mandatory,
-    ParameterSetName='Name')]
-    [string]$Name,
+  #
+  [Parameter(Mandatory,
+  ParameterSetName='Name')]
+  [string]$Name,
 
-    #
-    [Parameter(Mandatory,
-    ParameterSetName='Name')]
-    [Parameter(Mandatory,
-    ParameterSetName='ID')]
-    [Parameter(Mandatory,
-    ParameterSetName='Device',
-    ValueFromPipeline,
-    ValueFromPipelinebyPropertyName)]
-    $Device,
+  #
+  [Parameter(Mandatory,
+  ParameterSetName='Name')]
+  [Parameter(Mandatory,
+  ParameterSetName='ID')]
+  [Parameter(Mandatory,
+  ParameterSetName='Device',
+  ValueFromPipeline,
+  ValueFromPipelinebyPropertyName)]
+  [device]$Device,
 
-    #
-    [Parameter(ParameterSetName='Device')]
-    $Object,
+  #
+  [Parameter(ParameterSetName='Device')]
+  [object]$Object,
 
-    #
-    [Parameter(ParameterSetName='Device')]
-    $Pluggin,
+  #
+  [Parameter(ParameterSetName='Device')]
+  [plugin]$Plugin,
 
-    #
-    [Parameter(ParameterSetName='Device')]
-    $Indicator,
+  #
+  [Parameter(ParameterSetName='Device')]
+  $Indicator,
 
-    #
-    [Parameter(Mandatory,
-    ParameterSetName='ID')]
-    [int]$ID
-  )
+  #
+  [Parameter(Mandatory,
+  ParameterSetName='ID')]
+  [int]$ID
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'Name' {
-            $return = $SevOne.threshold_getThresholdByName($Device.id,$Name)
-            continue
-          }
-        'Device' {
-            $return = $SevOne.threshold_getThresholdsByDevice($Device.id,$Pluggin.id,$Object.id,$Indicator.id)
-            continue
-          }
-        'ID' {
-            $return = $SevOne.threshold_getThresholdById($Device.id,$ID)
-            continue
-          }
-      }
-    $return | __ThresholdObject__
+  $return = @()
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'Name' {
+      $return = $SevOne.threshold_getThresholdByName($Device.id,$Name)
+      continue
+    }
+    'Device' {
+      $return = $SevOne.threshold_getThresholdsByDevice($Device.id,$Pluggin.id,$Object.id,$Indicator.id)
+      continue
+    }
+    'ID' {
+      $return = $SevOne.threshold_getThresholdById($Device.id,$ID)
+      continue
+    }
   }
+  $return.foreach{[threshold]$_}
+}
 }
 
 function New-SevOneThreshold {}

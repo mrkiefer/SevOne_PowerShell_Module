@@ -376,6 +376,7 @@ class userRole : SevOne {
     $this.parentid = $raw.parentid
     $this.name = $raw.name
   }
+
 }
 
 class objectType : SevOne {
@@ -394,6 +395,7 @@ class objectType : SevOne {
     $this.name = $raw.name
     $this.deviceTypeIds = $raw.deviceTypeIds
   }
+
 }
 
 class wmiProxy : SevOne {
@@ -412,12 +414,41 @@ class wmiProxy : SevOne {
     $this.name = $raw.name
     $this.port = $raw.port
   }
+
 }
 
+class indicator : SevOne {
+  #Properties
+  [int]$id
+  [string]$indicatorType
+  [string]$objectName
+  [int]$deviceId
+  [int]$indicatorTypeId
+  [int]$maxValue
+  [int]$systemMaxValue
+  [int]$overrideMaxValue
+  [string]$datatableColumn
+
+  #Constructors
+  indicator () {}
+
+  indicator ($raw) {
+    $this.id = $raw.id
+    $this.objectName = $raw.objectName
+    $this.deviceId = $raw.deviceId
+    $this.indicatorType = $raw.indicatorType
+    $this.indicatorTypeId = $raw.indicatorTypeId
+    $this.maxValue = $raw.maxValue
+    $this.systemMaxValue = $raw.systemMaxValue
+    $this.overrideMaxValue = $raw.overrideMaxValue
+    $this.datatableColumn = $raw.datatableColumn
+  }
+
+}
+
+
+
 #Classes remaining:
-# ObjectType
-# WMIProxy
-# Indicator
 # Report
 # Graph
 
