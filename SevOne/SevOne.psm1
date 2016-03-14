@@ -1597,179 +1597,178 @@ process {
 function New-SevOneWMIProxy {
 <#
   .SYNOPSIS
+    Creates a new SevOne WMI Proxy
 
   .DESCRIPTION
+    Use this function to create a new SevOne WIM proxy.  It will not configure the actual proxy, it only creates to proxy object.
 
   .EXAMPLE
+    New-SevOneWMIProxy -Name Proxy1 -Port 3000 -IPAddress 192.168.50.100
     
   .NOTES
     
 #>
 [cmdletbinding(DefaultParameterSetName='default')]
-param
-  (
-    #
-    [parameter(Mandatory,
-    ParameterSetName='default',
-    ValueFromPipelineByPropertyName)]
-    [string]$Name,
+param (
+  #
+  [parameter(Mandatory,
+  ParameterSetName='default',
+  ValueFromPipelineByPropertyName)]
+  [string]$Name,
     
-    #
-    [parameter(Mandatory,
-    ParameterSetName='default',
-    ValueFromPipelineByPropertyName)]
-    [int]$Port,
+  #
+  [parameter(Mandatory,
+  ParameterSetName='default',
+  ValueFromPipelineByPropertyName)]
+  [int]$Port,
     
-    #
-    [parameter(Mandatory,
-    ParameterSetName='default',
-    ValueFromPipelineByPropertyName)]
-    [IPAddress]$IPAddress
-  )
+  #
+  [parameter(Mandatory,
+  ParameterSetName='default',
+  ValueFromPipelineByPropertyName)]
+  [IPAddress]$IPAddress
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+}
 process {
-    Write-Verbose 'begin process block'
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'default' {$return = $SevOne.plugin_wmi_createProxy($Name,$IPAddress.IPAddressToString,$Port.ToString()) }
-      }
-    switch ($return)
-      {
-        0 {Write-Error "Failed to create Proxy $Name"}
-        default {Write-Verbose "Successfully created proxy: $Name"}
-      }
+  Write-Verbose 'begin process block'
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'default' {$return = $SevOne.plugin_wmi_createProxy($Name,$IPAddress.IPAddressToString,$Port.ToString()) }
   }
+  switch ($return)
+  {
+    0 {Write-Error "Failed to create Proxy $Name"}
+    default {Write-Verbose "Successfully created proxy: $Name"}
+  }
+}
 }
 
 function Set-SevOneWMIProxy {
 <#
   .SYNOPSIS
+    Used only to enabled and disable the WMI proxy on a device
 
   .DESCRIPTION
+    Used only to enabled and disable the WMI proxy on a device
 
   .EXAMPLE
-    
-  .EXAMPLE
-    
-  .EXAMPLE
+    Get-SevOneDevice | Set-SevOneWMIProxy -Enabled $true
+
+    ---------------------------------------------------------------
+
+    Enables the WMI Proxy on all devices
     
   .NOTES
     
 #>
 [cmdletbinding(DefaultParameterSetName='default')]
-param
-  (
-    #
-    [parameter(Mandatory,
-    position = 0,
-    ParameterSetName='default',
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName)]
-    $Device,
+param (
+  #
+  [parameter(Mandatory,
+  position = 0,
+  ParameterSetName='default',
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName)]
+  $Device,
 
-    #
-    [parameter(Mandatory,
-    position = 1,
-    ParameterSetName='default',
-    ValueFromPipelineByPropertyName)]
-    [bool]$Enabled 
-  )
+  #
+  [parameter(Mandatory,
+  position = 1,
+  ParameterSetName='default',
+  ValueFromPipelineByPropertyName)]
+  [bool]$Enabled 
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-  }
-process {
-    $return = $SevOne.plugin_wmi_enablePluginForDevice($Device.id, [int]$Enabled)
-    switch ($return)
-      {
-        0 {Write-Error "Failed to set WMI plugin on $($Device.name)" ; continue}
-        1 {Write-Verbose "Successfully set plugin on $($Device.name)" ; continue}
-        default {throw "unexpected return code: $return" }
-      }
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
 }
+process {
+  $return = $SevOne.plugin_wmi_enablePluginForDevice($Device.id, [int]$Enabled)
+  switch ($return)
+  {
+    0 {Write-Error "Failed to set WMI plugin on $($Device.name)" ; continue}
+    1 {Write-Verbose "Successfully set plugin on $($Device.name)" ; continue}
+    default {throw "unexpected return code: $return" }
+  }
+}
+}
 
-function Add-SevOneWMIProxytoDevice {
+<#function Add-SevOneWMIProxytoDevice {
 <#
   .SYNOPSIS
+    Adds WMI Proxy settings on a device
 
   .DESCRIPTION
 
   .EXAMPLE
     
-  .EXAMPLE
-    
-  .EXAMPLE
-    
   .NOTES
-    
-#>
+  
 [cmdletbinding(DefaultParameterSetName='default')]
-param
-  (
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    $Device,
+param (
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  $Device,
 
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    $Proxy,
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  $Proxy,
 
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    [bool]$UseNTLM,
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  [bool]$UseNTLM,
 
-    # Be sure to omit domain info
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    [pscredential]$Credential,
+  # Be sure to omit domain info
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  [pscredential]$Credential,
 
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    [string]$Domain,
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  [string]$Domain,
 
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    [validateSet('Default','None','Connect','Call','Packet','PacketIntegrity','PacketPrivacy','Unchanged')]
-    [string]$AuthenticationLevel = 'default',
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  [validateSet('Default','None','Connect','Call','Packet','PacketIntegrity','PacketPrivacy','Unchanged')]
+  [string]$AuthenticationLevel = 'default',
 
-    #
-    [parameter(Mandatory,
-    ParameterSetName='Default',
-    ValueFromPipelineByPropertyName)]
-    [validateSet('Default','Anonymous','Delegate','Identify','Impersonate')]
-    [string]$ImpersonationLevel = 'default'
-  )
+  #
+  [parameter(Mandatory,
+  ParameterSetName='Default',
+  ValueFromPipelineByPropertyName)]
+  [validateSet('Default','Anonymous','Delegate','Identify','Impersonate')]
+  [string]$ImpersonationLevel = 'default'
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
     $UserName = $Credential.UserName
     if ($UserName -like '*\*')
-      {
-        $UserName = $UserName.Split('\')[-1]
-      }
+    {
+      $UserName = $UserName.Split('\')[-1]
+    }
     Set-SevOneWMIProxy -Enabled $true -Device $Device
     $return = $SevOne.plugin_wmi_setProxy($Device.id,$Proxy.id)
     $return | __TestReturn__
@@ -1786,7 +1785,7 @@ process {
     $return = $SevOne.plugin_wmi_setImpersonationLevel($Device.id, $ImpersonationLevel)
     $return | __TestReturn__
   }
-}
+}#>
 
 function Optimize-SevOneWMIProxy {
     [cmdletbinding()]
