@@ -99,7 +99,7 @@ class Object : SevOne {
   Object ($obj) {
     $this.id = $obj.id
     $this.deviceID = $obj.deviceId
-    $this.plugin = $obj.pluginString
+    $this.pluginString = $obj.pluginString
     $this.name = $obj.name
     $this.system_description = $obj.system_description
     $this.description = $obj.description
