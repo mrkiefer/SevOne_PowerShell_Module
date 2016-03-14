@@ -7,3 +7,5 @@ At this point there is no stable release for the module, changes may break exist
 Please use this module with considerable caution while it is still under development. 
 
 Requires Powershell Version 5
+
+Currently seems to be working - Really need to add tests to cover the bulk of the modules functionality
