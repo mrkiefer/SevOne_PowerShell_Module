@@ -237,7 +237,7 @@ process {
     $user.username = $UserCredential.UserName
     $user.Authentication = $Authentication
     Write-Debug "User loaded for $($UserCredential.UserName), ready to createuser()"
-    $return = $SevOne.user_createUser($UserCredential.UserName,$Role.id,$UserCredential.GetNetworkCredential().Password)
+    $return = $SevOne.user_createUser($user,$Role.id,$UserCredential.GetNetworkCredential().Password)
     if ($Passthrough) {
         Get-SevOneUser -Id $return
       }
@@ -293,6 +293,7 @@ begin {
   }
 process {
     Write-Debug 'opened process block'
+    $return = @()
     switch ($PSCmdlet.ParameterSetName)
       {
         'Default' {
@@ -315,7 +316,7 @@ process {
           }
       }
     Write-Debug 'Sending $return to object creation'
-    $return | __DeviceGroupObject__
+    $return.foreach{[deviceGroup]$_}
   }
 end {}
 }
