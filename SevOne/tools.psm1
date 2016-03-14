@@ -15,13 +15,26 @@ switch ($return)
     }
 }
 
-function __TestSevOneConnection__ {
-  #Write-Verbose 'testing API connection by calling the returnthis() method'
-  #Write-Debug 'Begin test'
-  try {[bool]$SevOne.returnthis(1)} catch {$false}
-}
-
 ############ Probably delete all these
+filter __Object__ {
+$obj = [pscustomobject]@{
+      id = $_.id
+      deviceID = $_.deviceId
+      plugin = $_.pluginString
+      name = $_.name
+      system_description = $_.system_description
+      description = $_.description
+      objectType = $_.objectType
+      subtype = $_.subtype
+      enabledStatus = $_.enabledStatus 
+      hiddenStatus = $_.hiddenStatus
+      recordDate = $_.recordDate
+      lastSeen = $_.lastSeen
+      deletedStatus = $_.deletedStatus
+    }
+  $obj.PSObject.TypeNames.Insert(0,'SevOne.Object.Object')
+  $obj
+}
 
 function __userFactory__ {
 $SevOne.factory_User()
@@ -204,4 +217,24 @@ $obj = [pscustomobject]@{
   }
 $obj.PSObject.TypeNames.Insert(0,'SevOne.User.user')
 $obj
+}
+
+filter __ObjectType__ {
+$obj = [pscustomobject]@{
+      id = $_.id
+      deviceId = $_.deviceId
+      pluginString = $_.pluginString
+      name = $_.name 
+      system_description = $_.system_description
+      description = $_.description
+      objectType = $_.objectType
+      subtype = $_.subtype
+      enabledStatus = $_.enabledStatus
+      hiddenStatus = $_.hiddenStatus
+      recordDate = $_.recordDate
+      lastSeen = $_.lastSeen
+      deletedStatus = $_.deletedStatus
+    }
+  $obj.PSObject.TypeNames.Insert(0,'SevOne.Object.ObjectType')
+  $obj
 }

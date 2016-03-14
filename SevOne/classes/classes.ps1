@@ -357,3 +357,10 @@ class User : SevOne {
     $this.isSynced = $raw.isSynced
   }
 }
+
+#Classes remaining:
+# ObjectType
+# WMIProxy
+# Indicator
+# Report
+# Graph
