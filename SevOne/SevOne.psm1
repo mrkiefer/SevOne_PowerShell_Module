@@ -671,74 +671,86 @@ process {
 }
 
 function New-SevOneObject { 
-<##>
+<#
+  .SYNOPSIS
+    Create a new SevOne object by type and plugin
+
+  .DESCRIPTION
+    Use this to create new Objects in SevOne
+
+  .EXAMPLE
+    $type = Get-SevOneObjectType -Plugin DEFERRED | where name -Match 'System.Diagnostics.Process'
+    New-SevOneObject -Plugin Deferred -ObjectType $type -name 'MyNewObject'
+#>
 [cmdletbinding(DefaultParameterSetName='device')]
 param (
-    #
-    [parameter(Mandatory,
-    Position=0,
-    ValueFromPipelineByPropertyName,
-    ValueFromPipeline,
-    ParameterSetName='Plugin')]
-    $Name,
+  #
+  [parameter(Mandatory,
+  Position=0,
+  ValueFromPipelineByPropertyName,
+  ValueFromPipeline,
+  ParameterSetName='Plugin')]
+  [string]$Name,
     
-    #
-    [parameter(Mandatory,
-    Position=1,
-    ValueFromPipelineByPropertyName,
-    ValueFromPipeline,
-    ParameterSetName='Plugin')]
-    $ObjectType,
+  #
+  [parameter(Mandatory,
+  Position=1,
+  ValueFromPipelineByPropertyName,
+  ValueFromPipeline,
+  ParameterSetName='Plugin')]
+  [ObjectType]$ObjectType,
 
-    # The Device that will be associated with Alarms pulled
-    [parameter(Mandatory,
-    Position=2,
-    ValueFromPipelineByPropertyName,
-    ValueFromPipeline,
-    ParameterSetName='Plugin')]
-    [PSObject]$Device,
+  # The Device that will be associated with Alarms pulled
+  [parameter(Mandatory,
+  Position=2,
+  ValueFromPipelineByPropertyName,
+  ValueFromPipeline,
+  ParameterSetName='Plugin')]
+  [Device]$Device,
 
-    #
-    [parameter(Mandatory,
-    Position=3,
-    ValueFromPipelineByPropertyName,
-    ValueFromPipeline,
-    ParameterSetName='Plugin')]
-    [ValidateSet(
-      'COC',
-      'CALLMANAGER',
-      'CALLMANAGERCDR',
-      'DEFERRED',
-      'DNS',
-      'HTTP',
-      'ICMP',
-      'IPSLA',
-      'JMX',
-      'MYSQLDB',
-      'NBAR',
-      'ORACLEDB',
-      'PORTSHAKER',
-      'PROCESS',
-      'PROXYPING',
-      'SNMP',
-      'CALLD',
-      'VMWARE',
-      'WEBSTATUS',
-      'WMI',
-      'BULKDATA'
-    )]
-    [string]$Plugin
-  )
+  #
+  [parameter(Mandatory,
+  Position=3,
+  ValueFromPipelineByPropertyName,
+  ValueFromPipeline,
+  ParameterSetName='Plugin')]
+  [ValidateSet(
+    'COC',
+    'CALLMANAGER',
+    'CALLMANAGERCDR',
+    'DEFERRED',
+    'DNS',
+    'HTTP',
+    'ICMP',
+    'IPSLA',
+    'JMX',
+    'MYSQLDB',
+    'NBAR',
+    'ORACLEDB',
+    'PORTSHAKER',
+    'PROCESS',
+    'PROXYPING',
+    'SNMP',
+    'CALLD',
+    'VMWARE',
+    'WEBSTATUS',
+    'WMI',
+    'BULKDATA'
+  )]
+  [string]$Plugin
+)
 begin {
   if (-not (__TestSevOneConnection__)) {
-      throw 'Not connected to a SevOne instance'
-    }
+    throw 'Not connected to a SevOne instance'
+  }
   Write-Verbose "creating object $name of type $($ObjectType.name)"
   Write-Debug 'Ready to create object'
   $method = "plugin_$plugin`_getObjectTypes"
   $types = $SevOne.$method()
   if ($ObjectType.name -notin $types.name)
-    {throw 'no such type exists'}
+  {
+    throw 'no such type exists'
+  }
   $objectTypeID = $types.where{$_.name -match $ObjectType.name}.id
 }
 process {
