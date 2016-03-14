@@ -378,6 +378,24 @@ class userRole : SevOne {
   }
 }
 
+class objectType : SevOne {
+  #Properties
+  [int]$id
+  [int]$parentid
+  [string]$name
+  [int[]]$deviceTypeIds
+
+  #Constructors
+  objectType () {}
+
+  objectType ($raw) {
+    $this.id = $raw.id
+    $this.parentid = $raw.parentid
+    $this.name = $raw.name
+    $this.deviceTypeIds = $raw.deviceTypeIds
+  }
+}
+
 
 #Classes remaining:
 # ObjectType
@@ -385,6 +403,5 @@ class userRole : SevOne {
 # Indicator
 # Report
 # Graph
-# UserRole
 
 

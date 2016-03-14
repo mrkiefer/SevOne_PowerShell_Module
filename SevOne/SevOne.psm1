@@ -588,62 +588,62 @@ function Get-SevOneObject {
 <##>
 [cmdletbinding(DefaultParameterSetName='device')]
 param (
-    # The Device that will be associated with Alarms pulled
-    [parameter(Mandatory,
-    Position=0,
-    ValueFromPipelineByPropertyName,
-    ValueFromPipeline,
-    ParameterSetName='Device')]
-    [parameter(Mandatory,
-    Position=0,
-    ValueFromPipelineByPropertyName,
-    ValueFromPipeline,
-    ParameterSetName='Plugin')]
-    [PSObject]$Device,
+  # The Device that will be associated with Alarms pulled
+  [parameter(Mandatory,
+  Position=0,
+  ValueFromPipelineByPropertyName,
+  ValueFromPipeline,
+  ParameterSetName='Device')]
+  [parameter(Mandatory,
+  Position=0,
+  ValueFromPipelineByPropertyName,
+  ValueFromPipeline,
+  ParameterSetName='Plugin')]
+  [PSObject]$Device,
 
-    #
-    [parameter(Mandatory,
-    Position=1,
-    ParameterSetName='Plugin')]
-    [ValidateSet(
-      'COC',
-      'CALLMANAGER',
-      'CALLMANAGERCDR',
-      'DEFERRED',
-      'DNS',
-      'HTTP',
-      'ICMP',
-      'IPSLA',
-      'JMX',
-      'MYSQLDB',
-      'NBAR',
-      'ORACLEDB',
-      'PORTSHAKER',
-      'PROCESS',
-      'PROXYPING',
-      'SNMP',
-      'CALLD',
-      'VMWARE',
-      'WEBSTATUS',
-      'WMI',
-      'BULKDATA'
-    )]
-    [string]$Plugin
-  )
+  #
+  [parameter(Mandatory,
+  Position=1,
+  ParameterSetName='Plugin')]
+  [ValidateSet(
+    'COC',
+    'CALLMANAGER',
+    'CALLMANAGERCDR',
+    'DEFERRED',
+    'DNS',
+    'HTTP',
+    'ICMP',
+    'IPSLA',
+    'JMX',
+    'MYSQLDB',
+    'NBAR',
+    'ORACLEDB',
+    'PORTSHAKER',
+    'PROCESS',
+    'PROXYPING',
+    'SNMP',
+    'CALLD',
+    'VMWARE',
+    'WEBSTATUS',
+    'WMI',
+    'BULKDATA'
+  )]
+  [string]$Plugin
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+}
 process {
-    $return = @()
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'device' {$return = $SevOne.core_getObjectsByDeviceID($device.id)}
-        'plugin' {$return = $SevOne.core_getObjectsByDeviceIDAndPlugin($device.id,$Plugin)}
-      }
-    $return.foreach{[Object]$_}
+  $return = @()
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'device' {$return = $SevOne.core_getObjectsByDeviceID($device.id)}
+    'plugin' {$return = $SevOne.core_getObjectsByDeviceIDAndPlugin($device.id,$Plugin)}
   }
+  $return.foreach{[Object]$_}
+}
 }
 
 function New-SevOneObject { 
@@ -733,65 +733,65 @@ process {
 function Get-SevOneObjectType {
 [cmdletbinding(DefaultParameterSetName='all')]
 param (
-    #Set the Plugin Name
-    [parameter(Mandatory,
-    Position=0,
-    ParameterSetName='OS')]
-    [parameter(Mandatory,
-    Position=0,
-    ParameterSetName='All')]
-    [ValidateSet(
-      'COC',
-      'CALLMANAGER',
-      'CALLMANAGERCDR',
-      'DEFERRED',
-      'DNS',
-      'HTTP',
-      'ICMP',
-      'IPSLA',
-      'JMX',
-      'MYSQLDB',
-      'NBAR',
-      'ORACLEDB',
-      'PORTSHAKER',
-      'PROCESS',
-      'PROXYPING',
-      'SNMP',
-      'CALLD',
-      'VMWARE',
-      'WEBSTATUS',
-      'WMI',
-      'BULKDATA'
-    )]
-    [string]$Plugin,
+  #Set the Plugin Name
+  [parameter(Mandatory,
+  Position=0,
+  ParameterSetName='OS')]
+  [parameter(Mandatory,
+  Position=0,
+  ParameterSetName='all')]
+  [ValidateSet(
+    'COC',
+    'CALLMANAGER',
+    'CALLMANAGERCDR',
+    'DEFERRED',
+    'DNS',
+    'HTTP',
+    'ICMP',
+    'IPSLA',
+    'JMX',
+    'MYSQLDB',
+    'NBAR',
+    'ORACLEDB',
+    'PORTSHAKER',
+    'PROCESS',
+    'PROXYPING',
+    'SNMP',
+    'CALLD',
+    'VMWARE',
+    'WEBSTATUS',
+    'WMI',
+    'BULKDATA'
+  )]
+  [string]$Plugin,
 
-    # Specify a SevOne OSid must be an integer
-    [parameter(Mandatory,
-    Position=1,
-    ParameterSetName='OS')]
-    [alias('OSid')]
-    [int]$DeviceClass
-  )
+  # Specify a SevOne OSid must be an integer
+  [parameter(Mandatory,
+  Position=1,
+  ParameterSetName='OS')]
+  [alias('OSid')]
+  [int]$DeviceClass
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+}
 process {
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        All {
-            $method = "plugin_$Plugin`_getobjecttypes"
-            $return = $SevOne.$method()
-            $return | __ObjectType__
-          }
-        OS {
-            $method = "plugin_$Plugin`_getobjecttypes"
-            $return = $SevOne.$method($DeviceClass)
-            $return | __ObjectType__
-          }
-      }
+  $return = @()
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    all {
+      $method = "plugin_$Plugin`_getobjecttypes"
+      $return = $SevOne.$method()
+    }
+    OS {
+      $method = "plugin_$Plugin`_getobjecttypes"
+      $return = $SevOne.$method($DeviceClass)
+    }
   }
+  $return.foreach{[objectType]$_}
+}
 }
 
 function New-SevOneObjectType {
