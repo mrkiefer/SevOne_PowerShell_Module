@@ -129,10 +129,10 @@ function Get-SevOneUser {
 #>
 [cmdletbinding(DefaultParameterSetName='none')]
 param (
-    [parameter(Mandatory,
-    ParameterSetName='id')]
-    [int]$Id
-  )
+  [parameter(Mandatory,
+  ParameterSetName='id')]
+  [int]$Id
+)
 begin {
   if (-not (__TestSevOneConnection__)) {
     throw 'Not connected to a SevOne instance'
@@ -209,39 +209,45 @@ function New-SevOneUser {
 #>
 [cmdletbinding()]
 param (
-    [parameter(Mandatory)]
-    [pscredential]$UserCredential,
-    [parameter(Mandatory)]
-    [string]$EmailAddress,
-    [parameter(Mandatory)]
-    [userRole]$Role,
-    [parameter(Mandatory)]
-    [string]$FirstName,
-    [parameter(Mandatory)]
-    [string]$LastName,
-    [parameter(Mandatory)]
-    [validateset('SevOne','LDAP','TACACS','RADIUS')]
-    [string]$Authentication,
-    [switch]$Passthrough
-  )
+  [parameter(Mandatory)]
+  [pscredential]$UserCredential,
+
+  [parameter(Mandatory)]
+  [string]$EmailAddress,
+
+  [parameter(Mandatory)]
+  [userRole]$Role,
+
+  [parameter(Mandatory)]
+  [string]$FirstName,
+
+  [parameter(Mandatory)]
+  [string]$LastName,
+
+  [parameter(Mandatory)]
+  [validateset('SevOne','LDAP','TACACS','RADIUS')]
+  [string]$Authentication,
+
+  [switch]$Passthrough
+)
 begin {
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+}
 process {
-    $user = __userFactory__
-    $user.firstName = $FirstName
-    $user.lastName = $LastName
-    $user.email = $EmailAddress
-    $user.username = $UserCredential.UserName
-    $user.Authentication = $Authentication
-    Write-Debug "User loaded for $($UserCredential.UserName), ready to createuser()"
-    $return = $SevOne.user_createUser($user,$Role.id,$UserCredential.GetNetworkCredential().Password)
-    if ($Passthrough) {
-        Get-SevOneUser -Id $return
-      }
+  $user = __userFactory__
+  $user.firstName = $FirstName
+  $user.lastName = $LastName
+  $user.email = $EmailAddress
+  $user.username = $UserCredential.UserName
+  $user.Authentication = $Authentication
+  Write-Debug "User loaded for $($UserCredential.UserName), ready to createuser()"
+  $return = $SevOne.user_createUser($user,$Role.id,$UserCredential.GetNetworkCredential().Password)
+  if ($Passthrough) {
+    Get-SevOneUser -Id $return
   }
+}
 }
 
 #endregion Users
@@ -268,56 +274,56 @@ function Get-SevOneDeviceGroup { #
 #>
 [cmdletbinding(DefaultParameterSetName='default')]
 param (
-    #
-    [Parameter(Mandatory,
-    ParameterSetName='Name')]
-    [string]$Name,
+  #
+  [Parameter(Mandatory,
+  ParameterSetName='Name')]
+  [string]$Name,
 
-    # Specify the name of the Parent Group
-    [Parameter(
-    ParameterSetName='Name')]
-    [string]$ParentGroup = $null,
+  # Specify the name of the Parent Group
+  [Parameter(
+  ParameterSetName='Name')]
+  [string]$ParentGroup = $null,
      
-    #
-    [Parameter(Mandatory,
-    ParameterSetName='ID')]
-    [int]$ID
-  )
+  #
+  [Parameter(Mandatory,
+  ParameterSetName='ID')]
+  [int]$ID
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    Write-Debug 'opened process block'
-    $return = @()
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'Default' {
-            Write-Debug 'in Default block'
-            $return = $SevOne.group_getDeviceGroups()
-            Write-Debug "`$return has $($return.Count) members"
-            continue
-          }
-        'Name' {
-            Write-Debug 'in Name block'
-            $return = $SevOne.group_getDeviceGroupById($SevOne.group_getDeviceGroupIdByName($ParentGroup ,$Name)) # only returning one result
-            Write-Debug "`$return has $($return.Count) members"
-            continue
-          }
-        'ID' {
-            Write-Debug 'in ID block'
-            $return = $SevOne.group_getDeviceGroupById($ID)
-            Write-Debug "`$return has $($return.Count) members"
-            continue
-          }
-      }
-    Write-Debug 'Sending $return to object creation'
-    $return.foreach{[deviceGroup]$_}
+  Write-Debug 'opened process block'
+  $return = @()
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'Default' {
+      Write-Debug 'in Default block'
+      $return = $SevOne.group_getDeviceGroups()
+      Write-Debug "`$return has $($return.Count) members"
+      continue
+    }
+    'Name' {
+      Write-Debug 'in Name block'
+      $return = $SevOne.group_getDeviceGroupById($SevOne.group_getDeviceGroupIdByName($ParentGroup ,$Name)) # only returning one result
+      Write-Debug "`$return has $($return.Count) members"
+      continue
+    }
+    'ID' {
+      Write-Debug 'in ID block'
+      $return = $SevOne.group_getDeviceGroupById($ID)
+      Write-Debug "`$return has $($return.Count) members"
+      continue
+    }
   }
+  Write-Debug 'Sending $return to object creation'
+  $return.foreach{[deviceGroup]$_}
+}
 end {}
 }
 
@@ -332,205 +338,226 @@ function New-SevOneDeviceGroup {
 #>
 [cmdletBinding(DefaultParameterSetName='group')]
 param (
-    # ID of the parent group
-    [Parameter(Mandatory,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='id')]
-    [int]$ParentID,
+  # ID of the parent group
+  [Parameter(Mandatory,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='id')]
+  [int]$ParentID,
 
-    # Group object for parent group
-    [Parameter(Mandatory,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='group')]
-    $ParentGroup,
+  # Group object for parent group
+  [Parameter(Mandatory,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='group')]
+  $ParentGroup,
     
-    # The name for the new group
-    [Parameter(Mandatory,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='group')]
-    [Parameter(Mandatory,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='id')]
-    [string]$Name,
+  # The name for the new group
+  [Parameter(Mandatory,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='group')]
+  [Parameter(Mandatory,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='id')]
+  [string]$Name,
 
-    # Set if you would like the new group to be output to the pipeline
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='group')]
-    [Parameter(
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='id')]
-    [switch]$PassThrough
-  )
+  # Set if you would like the new group to be output to the pipeline
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='group')]
+  [Parameter(
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='id')]
+  [switch]$PassThrough
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
-  }
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+      throw 'Not connected to a SevOne instance'
+    }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'group' {
-            $return = $SevOne.group_createDeviceGroup($Name,$ParentGroup.ID)
-            Write-Debug 'Finished generating $return'
-          }
-        'id' {
-             $return = $SevOne.group_createDeviceGroup($Name,$ParentID)
-             Write-Debug 'Finished generating $return'
-          }
-      }
-    switch ($return)
-      {
-        -1 {Write-Error "Could not create group: $Name" ; continue}
-        default {
-            Write-Verbose "Successfully created group $Name" 
-            if ($PassThrough) {Get-SevoneDeviceGroup -ID $return}
-            continue
-          }
-      }
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'group' {
+      $return = $SevOne.group_createDeviceGroup($Name,$ParentGroup.ID)
+      Write-Debug 'Finished generating $return'
+    }
+    'id' {
+        $return = $SevOne.group_createDeviceGroup($Name,$ParentID)
+        Write-Debug 'Finished generating $return'
+    }
   }
+  switch ($return)
+  {
+    -1 {Write-Error "Could not create group: $Name" ; continue}
+    default {
+      Write-Verbose "Successfully created group $Name" 
+      if ($PassThrough) {Get-SevoneDeviceGroup -ID $return}
+      continue
+    }
+  }
+}
 end {}
 }
 
 function Get-SevOneObjectGroup {
-<##>
+<#
+  .SYNOPSIS
+    Gets a SevOne Object Group Object
+  
+  .DESCRIPTION
+    Use this command to get one or more Object Groups.
+
+  .EXAMPLE
+    Get-SevOneObjectGroup
+
+  .NOTES
+#>
 [cmdletbinding(DefaultParameterSetName='default')]
 param (
-    #
-    [Parameter(Mandatory,
-    ParameterSetName='ID')]
-    [int]$ID
-  )
+  #
+  [Parameter(Mandatory,
+  ParameterSetName='ID')]
+  [int]$ID
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    Write-Debug 'opened process block'
-    $return = @()
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'Default' {
-            Write-Debug 'in Default block'
-            $return = $SevOne.group_getObjectGroups()
-            Write-Debug "`$return has $($return.Count) members"
-            continue
-          }
-        'ID' {
-            Write-Debug 'in ID block'
-            $return = $SevOne.group_getObjectGroupById($ID)
-            Write-Debug "`$return has $($return.Count) members"
-            continue
-          }
-      }
-    Write-Debug 'Sending $return to object creation'
-    $return.foreach{[objectGroup]$_}
+  Write-Debug 'opened process block'
+  $return = @()
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'Default' {
+      Write-Debug 'in Default block'
+      $return = $SevOne.group_getObjectGroups()
+      Write-Debug "`$return has $($return.Count) members"
+      continue
+    }
+    'ID' {
+      Write-Debug 'in ID block'
+      $return = $SevOne.group_getObjectGroupById($ID)
+      Write-Debug "`$return has $($return.Count) members"
+      continue
+    }
   }
+  Write-Debug 'Sending $return to object creation'
+  $return.foreach{[objectGroup]$_}
+}
 end {}
 }
 
 function Get-SevOneObjectClass {
 <#
+  .SYNOPSIS
+    Gets a SevOne Object Class Object
+
+  .DESCRIPTION
+    Use this function to return one or more Object Class Objects.  You can Specify a name or ID.  You can also use it as is to get all object class objects from the PAS appliance.
+
+  .EXAMPLE
+    Get-SevOneObjectClass
+
+  .NOTES
 
 #>
 [cmdletbinding(DefaultParameterSetName='default')]
 param (
-    #
-    [Parameter(Mandatory,
-    ParameterSetName='Name')]
-    [string]$Name,
+  # Class name
+  [Parameter(Mandatory,
+  ParameterSetName='Name')]
+  [string]$Name,
 
-    #
-    [Parameter(Mandatory,
-    ParameterSetName='ID')]
-    [int]$ID
-  )
+  # Class ID
+  [Parameter(Mandatory,
+  ParameterSetName='ID')]
+  [int]$ID
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
-  }
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+      throw 'Not connected to a SevOne instance'
+    }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    $return = @()
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'Default' {
-            $return = $SevOne.group_getObjectClasses()
-            continue
-          }
-        'Name' {
-            $return = $SevOne.group_getObjectClassByName($Name)
-            continue
-          }
-        'ID' {
-            $return = $SevOne.group_getObjectClassById($ID)
-            continue
-          }
-      }
-    $return.foreach{[objectClass]$_}
+  $return = @()
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'Default' {
+      $return = $SevOne.group_getObjectClasses()
+      continue
+    }
+    'Name' {
+      $return = $SevOne.group_getObjectClassByName($Name)
+      continue
+    }
+    'ID' {
+      $return = $SevOne.group_getObjectClassById($ID)
+      continue
+    }
   }
+  $return.foreach{[objectClass]$_}
+}
 } 
 
 function Add-SevOneDeviceToGroup {
 <##>
 [cmdletbinding(DefaultParameterSetName='default')]
 param (
-    [parameter(Mandatory,
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    [device]$Device,
-    [parameter(Mandatory,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='default')]
-    [deviceGroup]$Group,
-    [parameter(Mandatory,
-    ValueFromPipeline,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='ID')]
-    [int]$DeviceID,
-    [parameter(Mandatory,
-    ValueFromPipelineByPropertyName,
-    ParameterSetName='ID')]
-    [int]$GroupID
-  )
+  [parameter(Mandatory,
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [device]$Device,
+  [parameter(Mandatory,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='default')]
+  [deviceGroup]$Group,
+  [parameter(Mandatory,
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='ID')]
+  [int]$DeviceID,
+  [parameter(Mandatory,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='ID')]
+  [int]$GroupID
+)
 begin {
-    Write-Verbose 'Starting operation'
-    if (-not (__TestSevOneConnection__)) {
-        throw 'Not connected to a SevOne instance'
-      }
-    Write-Verbose 'Connection verified'
-    Write-Debug 'finished begin block'
+  Write-Verbose 'Starting operation'
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
   }
+  Write-Verbose 'Connection verified'
+  Write-Debug 'finished begin block'
+}
 process {
-    switch ($PSCmdlet.ParameterSetName)
-      {
-        'default' {
-            $return = $SevOne.group_addDeviceToGroup($Device.ID,$Group.ID)
-          }
-        'ID' {
-            $return = $SevOne.group_addDeviceToGroup($DeviceID,$GroupID)
-          }
-      }
-    switch ($return)
-      {
-        0 {Write-Error 'Could not add device to group' ; continue}
-        default {
-            Write-Verbose 'Successfully added device to group'
-            continue
-          }
-      }
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'default' {
+      $return = $SevOne.group_addDeviceToGroup($Device.ID,$Group.ID)
+    }
+    'ID' {
+      $return = $SevOne.group_addDeviceToGroup($DeviceID,$GroupID)
+    }
   }
+  switch ($return)
+  {
+    0 {Write-Error 'Could not add device to group' ; continue}
+    default {
+      Write-Verbose 'Successfully added device to group'
+      continue
+    }
+  }
+}
 end {}
 }
 
