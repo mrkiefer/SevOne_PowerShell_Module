@@ -37,6 +37,8 @@ class device : SevOne {
   [string]$timezone
 
   #Constructors
+  device () {}
+
   device (
       $base
     )

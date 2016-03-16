@@ -52,31 +52,30 @@ function Connect-SevOne {
     $Cred.UserName
     $Cred.GetNetworkCredential().password
 #>
-  [CmdletBinding()]
-  param
-  (
-    # Set the Computername or IP address of the SevOneinstance you wish to connect to
-    [Parameter(Mandatory,
-    Position=0,
-    ParameterSetName='Default')]
-    [string]
-    $ComputerName,
+[CmdletBinding()]
+param (
+  # Set the Computername or IP address of the SevOneinstance you wish to connect to
+  [Parameter(Mandatory,
+  Position=0,
+  ParameterSetName='Default')]
+  [string]
+  $ComputerName,
     
-    # Specify the Credentials for the SevOne Connection
-    [Parameter(Mandatory,
-    Position=1,
-    ParameterSetName='Default')]
-    [PSCredential]
-    $Credential,
+  # Specify the Credentials for the SevOne Connection
+  [Parameter(Mandatory,
+  Position=1,
+  ParameterSetName='Default')]
+  [PSCredential]
+  $Credential,
 
-    # Set this option if you are connecting via SSL
-    [Parameter(ParameterSetName='Default')]
-    [switch]$UseSSL,
+  # Set this option if you are connecting via SSL
+  [Parameter(ParameterSetName='Default')]
+  [switch]$UseSSL,
 
-    # Set this option if you would like to expose the SevOne SOAP API Object
-    [Parameter(ParameterSetName='Default')]
-    [switch]$ExposeAPI
-  )
+  # Set this option if you would like to expose the SevOne SOAP API Object
+  [Parameter(ParameterSetName='Default')]
+  [switch]$ExposeAPI
+)
 Write-Debug 'starting connection process'
 Write-Debug "`$UseSSL is $UseSSL"
 if ($UseSSL) { $SoapUrl = "https://$ComputerName/soap3/api.wsdl" }
@@ -287,7 +286,14 @@ param (
   #
   [Parameter(Mandatory,
   ParameterSetName='ID')]
-  [int]$ID
+  [int]$ID,
+
+  #
+  [Parameter(Mandatory,
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName,
+  ParameterSetName='device')]
+  [device]$Device
 )
 begin {
   Write-Verbose 'Starting operation'
@@ -319,6 +325,11 @@ process {
       $return = $SevOne.group_getDeviceGroupById($ID)
       Write-Debug "`$return has $($return.Count) members"
       continue
+    }
+    'device' {
+      Write-Verbose "grabbing groups for $($Device.name)"
+      $return = $SevOne.group_getDeviceGroupIdsByDeviceId($Device.id)
+      $return = $return.foreach{$SevOne.group_getDeviceGroupById($_)}
     }
   }
   Write-Debug 'Sending $return to object creation'
@@ -413,13 +424,20 @@ function Get-SevOneObjectGroup {
     Get-SevOneObjectGroup
 
   .NOTES
+
 #>
 [cmdletbinding(DefaultParameterSetName='default')]
 param (
   #
   [Parameter(Mandatory,
-  ParameterSetName='ID')]
-  [int]$ID
+  ParameterSetName='id')]
+  [int]$id,
+
+  #
+  [Parameter(Mandatory,
+  ParameterSetName='name')]
+  [string]$Name
+
 )
 begin {
   Write-Verbose 'Starting operation'
@@ -434,17 +452,21 @@ process {
   $return = @()
   switch ($PSCmdlet.ParameterSetName)
   {
-    'Default' {
+    'default' {
       Write-Debug 'in Default block'
       $return = $SevOne.group_getObjectGroups()
       Write-Debug "`$return has $($return.Count) members"
       continue
     }
-    'ID' {
+    'id' {
       Write-Debug 'in ID block'
-      $return = $SevOne.group_getObjectGroupById($ID)
+      $return = $SevOne.group_getObjectGroupById($id)
       Write-Debug "`$return has $($return.Count) members"
       continue
+    }
+    'name' {
+      $id = $SevOne.group_getObjectGroupIdByName($name)
+      $return = $SevOne.group_getObjectGroupById($id)
     }
   }
   Write-Debug 'Sending $return to object creation'
@@ -650,7 +672,7 @@ param (
   ValueFromPipelineByPropertyName,
   ValueFromPipeline,
   ParameterSetName='Plugin')]
-  [PSObject]$Device,
+  [device]$Device,
 
   #
   [parameter(Mandatory,
@@ -2172,8 +2194,10 @@ param (
 
   #
   [parameter(Mandatory,
-  ParameterSetName='Group')]
-  $Group
+  ParameterSetName='Group',
+  ValueFromPipeline,
+  ValueFromPipelineByPropertyName)]
+  [deviceGroup]$Group
 )
 begin {
   if (-not (__TestSevOneConnection__)) {
