@@ -678,30 +678,7 @@ param (
   [parameter(Mandatory,
   Position=1,
   ParameterSetName='Plugin')]
-  [ValidateSet(
-    'COC',
-    'CALLMANAGER',
-    'CALLMANAGERCDR',
-    'DEFERRED',
-    'DNS',
-    'HTTP',
-    'ICMP',
-    'IPSLA',
-    'JMX',
-    'MYSQLDB',
-    'NBAR',
-    'ORACLEDB',
-    'PORTSHAKER',
-    'PROCESS',
-    'PROXYPING',
-    'SNMP',
-    'CALLD',
-    'VMWARE',
-    'WEBSTATUS',
-    'WMI',
-    'BULKDATA'
-  )]
-  [string]$Plugin
+  [plugins]$Plugin
 )
 begin {
   if (-not (__TestSevOneConnection__)) {
@@ -763,30 +740,7 @@ param (
   ValueFromPipelineByPropertyName,
   ValueFromPipeline,
   ParameterSetName='Plugin')]
-  [ValidateSet(
-    'COC',
-    'CALLMANAGER',
-    'CALLMANAGERCDR',
-    'DEFERRED',
-    'DNS',
-    'HTTP',
-    'ICMP',
-    'IPSLA',
-    'JMX',
-    'MYSQLDB',
-    'NBAR',
-    'ORACLEDB',
-    'PORTSHAKER',
-    'PROCESS',
-    'PROXYPING',
-    'SNMP',
-    'CALLD',
-    'VMWARE',
-    'WEBSTATUS',
-    'WMI',
-    'BULKDATA'
-  )]
-  [string]$Plugin
+  [plugins]$Plugin
 )
 begin {
   if (-not (__TestSevOneConnection__)) {
@@ -825,30 +779,7 @@ param (
   [parameter(Mandatory,
   Position=0,
   ParameterSetName='all')]
-  [ValidateSet(
-    'COC',
-    'CALLMANAGER',
-    'CALLMANAGERCDR',
-    'DEFERRED',
-    'DNS',
-    'HTTP',
-    'ICMP',
-    'IPSLA',
-    'JMX',
-    'MYSQLDB',
-    'NBAR',
-    'ORACLEDB',
-    'PORTSHAKER',
-    'PROCESS',
-    'PROXYPING',
-    'SNMP',
-    'CALLD',
-    'VMWARE',
-    'WEBSTATUS',
-    'WMI',
-    'BULKDATA'
-  )]
-  [string]$Plugin,
+  [plugins]$Plugin,
 
   # Specify a SevOne OSid must be an integer
   [parameter(Mandatory,
@@ -897,30 +828,7 @@ param (
   #Set the Plugin Name
   [parameter(Mandatory,
   Position=0)]
-  [ValidateSet(
-    'COC',
-    'CALLMANAGER',
-    'CALLMANAGERCDR',
-    'DEFERRED',
-    'DNS',
-    'HTTP',
-    'ICMP',
-    'IPSLA',
-    'JMX',
-    'MYSQLDB',
-    'NBAR',
-    'ORACLEDB',
-    'PORTSHAKER',
-    'PROCESS',
-    'PROXYPING',
-    'SNMP',
-    'CALLD',
-    'VMWARE',
-    'WEBSTATUS',
-    'WMI',
-    'BULKDATA'
-  )]
-  [string]$Plugin,
+  [plugins]$Plugin,
 
   # Specify a SevOne OSid must be an integer
   [parameter(
@@ -1030,30 +938,7 @@ param (
   # specify plugin to be enabled
   [parameter(Mandatory,
   Position=1)]
-  [ValidateSet(
-    'COC',
-    'CALLMANAGER',
-    'CALLMANAGERCDR',
-    'DEFERRED',
-    'DNS',
-    'HTTP',
-    'ICMP',
-    'IPSLA',
-    'JMX',
-    'MYSQLDB',
-    'NBAR',
-    'ORACLEDB',
-    'PORTSHAKER',
-    'PROCESS',
-    'PROXYPING',
-    'SNMP',
-    'CALLD',
-    'VMWARE',
-    'WEBSTATUS',
-    'WMI',
-    'BULKDATA'
-  )]
-  [string]$Plugin
+  [plugins]$Plugin
 )
 begin {
   if (-not (__TestSevOneConnection__)) {
@@ -1091,30 +976,7 @@ param (
   # specify plugin to be disabled
   [parameter(Mandatory,
   Position=1)]
-  [ValidateSet(
-    'COC',
-    'CALLMANAGER',
-    'CALLMANAGERCDR',
-    'DEFERRED',
-    'DNS',
-    'HTTP',
-    'ICMP',
-    'IPSLA',
-    'JMX',
-    'MYSQLDB',
-    'NBAR',
-    'ORACLEDB',
-    'PORTSHAKER',
-    'PROCESS',
-    'PROXYPING',
-    'SNMP',
-    'CALLD',
-    'VMWARE',
-    'WEBSTATUS',
-    'WMI',
-    'BULKDATA'
-  )]
-  [string]$Plugin
+  [plugins]$Plugin
 )
 begin {
   if (-not (__TestSevOneConnection__)) {
@@ -1152,30 +1014,7 @@ param (
   # specify plugin to be tested
   [parameter(Mandatory,
   Position=1)]
-  [ValidateSet(
-    'COC',
-    'CALLMANAGER',
-    'CALLMANAGERCDR',
-    'DEFERRED',
-    'DNS',
-    'HTTP',
-    'ICMP',
-    'IPSLA',
-    'JMX',
-    'MYSQLDB',
-    'NBAR',
-    'ORACLEDB',
-    'PORTSHAKER',
-    'PROCESS',
-    'PROXYPING',
-    'SNMP',
-    'CALLD',
-    'VMWARE',
-    'WEBSTATUS',
-    'WMI',
-    'BULKDATA'
-  )]
-  [string]$Plugin,
+  [plugins]$Plugin,
 
   # Set to return only a boolean
   [switch]$Quiet
@@ -2525,30 +2364,7 @@ param (
     ValueFromPipeline,
     ValuefromPipelinebyPropertyName)]
     $Indicator,
-    [ValidateSet(
-      'COC',
-      'CALLMANAGER',
-      'CALLMANAGERCDR',
-      'DEFERRED',
-      'DNS',
-      'HTTP',
-      'ICMP',
-      'IPSLA',
-      'JMX',
-      'MYSQLDB',
-      'NBAR',
-      'ORACLEDB',
-      'PORTSHAKER',
-      'PROCESS',
-      'PROXYPING',
-      'SNMP',
-      'CALLD',
-      'VMWARE',
-      'WEBSTATUS',
-      'WMI',
-      'BULKDATA'
-    )]
-    [string]$Plugin
+    [plugins]$Plugin
   )
 begin {}
 Process {
@@ -2828,30 +2644,7 @@ param (
   Position=1,
   ValueFromPipelineByPropertyName,
   ParameterSetName='Object')]
-  [ValidateSet(
-      'COC',
-      'CALLMANAGER',
-      'CALLMANAGERCDR',
-      'DEFERRED',
-      'DNS',
-      'HTTP',
-      'ICMP',
-      'IPSLA',
-      'JMX',
-      'MYSQLDB',
-      'NBAR',
-      'ORACLEDB',
-      'PORTSHAKER',
-      'PROCESS',
-      'PROXYPING',
-      'SNMP',
-      'CALLD',
-      'VMWARE',
-      'WEBSTATUS',
-      'WMI',
-      'BULKDATA'
-    )]
-  [string]$Plugin,
+  [plugins]$Plugin,
 
   # The Device that will be associated with Alarms pulled
   [parameter(Mandatory,
