@@ -9,3 +9,7 @@ Also in the midst of refactoring the entire module.
 # 1.0.3
 
 Most core functions are now leveraging powershell classes
+
+# 1.0.4
+
+Added an Enum class for plugins
