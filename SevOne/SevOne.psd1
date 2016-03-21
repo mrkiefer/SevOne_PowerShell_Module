@@ -12,7 +12,7 @@
 RootModule = 'SevOne.psm1'
 
 # Version number of this module.
-ModuleVersion = '1.0.3'
+ModuleVersion = '1.0.5'
 
 # ID used to uniquely identify this module
 GUID = '21545567-9e35-4ff6-a35c-67d31564cbee'
@@ -54,7 +54,7 @@ PowerShellVersion = '5.0'
 # RequiredAssemblies = @()
 
 # Script files (.ps1) that are run in the caller's environment prior to importing this module.
-ScriptsToProcess = @("$PSScriptRoot\classes\classes.ps1","$PSScriptRoot\Scripts\Alerts.ps1","$PSScriptRoot\Scripts\Devices.ps1")
+ScriptsToProcess = @("classes\classes.ps1")
 
 # Type files (.ps1xml) to be loaded when importing this module
 # TypesToProcess = @()
@@ -66,7 +66,7 @@ ScriptsToProcess = @("$PSScriptRoot\classes\classes.ps1","$PSScriptRoot\Scripts\
 NestedModules = @("unixtime.psm1","tools.psm1")
 
 # Functions to export from this module
-FunctionsToExport = '*'
+FunctionsToExport = '*-*'
 
 # Cmdlets to export from this module
 CmdletsToExport = '*'

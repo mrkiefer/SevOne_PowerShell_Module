@@ -13,3 +13,7 @@ Most core functions are now leveraging powershell classes
 # 1.0.4
 
 Added an Enum class for plugins
+
+# 1.0.5 
+
+Using export functions section of manifest
