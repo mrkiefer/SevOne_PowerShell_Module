@@ -632,6 +632,118 @@ end {}
 
 #endregion Groups
 
+#region Polls
+
+function Get-SevOnePolls {
+<#
+  .SYNOPSIS
+    Gets a SevOne Poll
+  .DESCRIPTION
+    Use this function to get one or more SevOne Polls for a given device.
+  .EXAMPLE
+    Get-SevOneDevice | Get-SevOnePolls
+
+    ------------------------------------------
+
+    Gets all objects for all devices
+
+    
+#>
+[cmdletbinding(DefaultParameterSetName='device')]
+param (
+  # The Device that will be associated with Polls pulled
+  [parameter(Mandatory,
+  Position=0,
+  ValueFromPipelineByPropertyName,
+  ValueFromPipeline,
+  ParameterSetName='Device')]
+  
+  [parameter(Mandatory,
+  Position=0,
+  ValueFromPipelineByPropertyName,
+  ValueFromPipeline,
+  ParameterSetName='Plugin')]
+  [device]$Device,
+
+  #
+  [parameter(Mandatory,
+  Position=1,
+  ParameterSetName='Plugin')]
+  [plugins]$Plugin
+)
+begin {
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
+  }
+}
+process {
+  $return = @()
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'device' {$return = $SevOne.core_getPollsByDeviceID($device.id)}    
+  }
+  $return.foreach{[poll]$_}
+}
+}
+
+#endregion Polls
+
+
+#region Bulkdata_IndicatorType
+
+function Get-SevOneBulkdataIndicatorType {
+<#
+  .SYNOPSIS
+    Gets a SevOne Poll
+  .DESCRIPTION
+    Use this function to get one or more SevOne Polls for a given device.
+  .EXAMPLE
+    Get-SevOneDevice | Get-SevOnePolls
+
+    ------------------------------------------
+
+    Gets all objects for all devices
+
+    
+#>
+[cmdletbinding(DefaultParameterSetName='default')]
+param (
+  # The Device that will be associated with Polls pulled
+  [parameter(Mandatory,
+  Position=0,
+  ValueFromPipelineByPropertyName,
+  ValueFromPipeline,
+  ParameterSetName='Device')]
+  
+  [parameter(Mandatory,
+  Position=0,
+  ValueFromPipelineByPropertyName,
+  ValueFromPipeline,
+  ParameterSetName='Plugin')]
+  [device]$Device,
+  #
+  [parameter(Mandatory,
+  Position=1,
+  ParameterSetName='Plugin')]
+  [plugins]$Plugin
+)
+begin {
+  if (-not (__TestSevOneConnection__)) {
+    throw 'Not connected to a SevOne instance'
+  }
+}
+process {
+  $return = @()
+  switch ($PSCmdlet.ParameterSetName)
+  {
+    'device' {$return = $SevOne.plugin_bulkdata_getIndicatorTypes()}    
+  }
+  $return.foreach{[bulkdata_indicatortype]$_}
+}
+}
+
+#endregion Bulkdata_IndicatorType
+
 #region Objects
 function Get-SevOneObject {
 <#

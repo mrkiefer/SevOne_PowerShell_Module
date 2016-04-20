@@ -103,6 +103,51 @@ class device : SevOne {
   #Methods
 }
 
+class poll : SevOne {
+#Properties
+  [int]$id
+  [int]$deviceId
+  [string]$pluginString
+  [string]$objectName
+  [string]$indicator
+  [int]$maxValue
+#Constructors
+poll ( ) { }
+poll ($obj) {
+    $this.id = $obj.id
+    $this.deviceID = $obj.deviceId
+    $this.pluginString = $obj.pluginString
+    $this.objectName = $obj.objectName
+    $this.indicator = $obj.indicator
+    $this.maxValue = $obj.maxValue
+  }
+}
+
+
+class bulkdata_indicatortype : SevOne {
+#Properties
+  [int]$id
+  [int]$objectTypeId
+  [string]$name
+  [string]$description
+  [string]$format
+  [int]$hasMaxValue
+  [string]$dataUnits
+  [string]$displayUnits
+#Constructors
+poll ( ) { }
+poll ($obj) {
+    $this.id = $obj.id
+    $this.objectTypeId = $obj.objectTypeId
+    $this.name = $obj.name
+    $this.description = $obj.description
+    $this.format = $obj.format
+    $this.hasMaxValue = $obj.hasMaxValue
+    $this.dataUnits = $obj.dataUnits
+    $this.displayUnits = $obj.displayUnits
+  }
+}
+
 class object : SevOne {
   #Properties
   [int]$id
