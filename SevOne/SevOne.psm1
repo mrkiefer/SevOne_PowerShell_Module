@@ -2972,6 +2972,19 @@ process {
 }
 }
 
+
+function Get-SevOnePlugins {
+param ()
+process {
+    $return = $SevOne.report_createReport($Name)
+    if ($PassThrough) {
+        $SevOne.report_getReportById($return)
+      }
+      $SeVOne.core_getPlugins()
+	
+  }
+}
+
 function New-SevOneThreshold {}
 
 function Set-SevOneThreshold {}

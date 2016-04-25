@@ -123,31 +123,6 @@ poll ($obj) {
   }
 }
 
-
-class bulkdata_indicatortype : SevOne {
-#Properties
-  [int]$id
-  [int]$objectTypeId
-  [string]$name
-  [string]$description
-  [string]$format
-  [int]$hasMaxValue
-  [string]$dataUnits
-  [string]$displayUnits
-#Constructors
-poll ( ) { }
-poll ($obj) {
-    $this.id = $obj.id
-    $this.objectTypeId = $obj.objectTypeId
-    $this.name = $obj.name
-    $this.description = $obj.description
-    $this.format = $obj.format
-    $this.hasMaxValue = $obj.hasMaxValue
-    $this.dataUnits = $obj.dataUnits
-    $this.displayUnits = $obj.displayUnits
-  }
-}
-
 class object : SevOne {
   #Properties
   [int]$id
@@ -516,6 +491,46 @@ class indicator : SevOne {
   }
 
 }
+
+
+class snmp_indicator : SevOne {
+  #Properties
+  [int]$id
+  [int]$deviceId
+  [string]$objectName
+  [string]$indicatorType
+  [int]$indicatorTypeId
+  [int]$maxValue
+  [int]$systemMaxValue
+  [int]$overrideMaxValue
+  [string]$datatableColumn
+  [string]$snmpObjectId
+  [string]$oidExpression
+  [string]$oidList
+
+
+
+  #Constructors
+  indicator () {}
+
+  indicator ($raw) {
+    $this.id = $raw.id
+    $this.deviceId = $raw.deviceId
+    $this.objectName = $raw.objectName
+    $this.indicatorType = $raw.indicatorType
+    $this.indicatorTypeId = $raw.indicatorTypeId
+    $this.maxValue = $raw.maxValue
+    $this.systemMaxValue = $raw.systemMaxValue
+    $this.overrideMaxValue = $raw.overrideMaxValue
+    $this.datatableColumn = $raw.datatableColumn
+    $this.snmpObjectId = $raw.snmpObjectId
+    $this.oidExpression = $raw.oidExpression
+    $this.oidList = $raw.oidList
+  }
+
+}
+
+
 
 
 
